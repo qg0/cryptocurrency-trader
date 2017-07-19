@@ -10,11 +10,13 @@ class Trader(object):
     
     __metaclass__ = ABCMeta
     
-    def __init__(self):
+    def __init__(self, is_test):
         print("Created a trader.")
-        self.assets = 0
+        self.balance = None
+        self.assets = None
         self.can_buy = True
         self.sell_all_assets = False
+        self.is_test = is_test
         
         #When the market changes significantly this is how much to buy or sell
         self.percent_to_spend_on_buy = 0.20
@@ -22,9 +24,6 @@ class Trader(object):
         
         #Threshold above which a valuation is not considered valid.
         self.outlier_threshold = 5000
-    
-    def get_assets(self):
-        return self.assets   
     
     @abstractmethod
     def buy(self, percent_to_spend, market_value):
@@ -43,6 +42,11 @@ class Trader(object):
         print("sell is expected to be overriden by a child of Trader")
         
     @abstractmethod
-    def get_balance(self):
-        print("get_balance is expected to be overriden by a child of Trader")
+    def fetch_balance(self):
+        print("fetch_balance is expected to be overriden by a child of Trader")
+        raise NotImplementedError
+    
+    @abstractmethod
+    def fetch_assets(self):
+        print("fetch_assets is expected to be overriden by a child of Trader")
         raise NotImplementedError

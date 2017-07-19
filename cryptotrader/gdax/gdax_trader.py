@@ -11,9 +11,14 @@ from cryptotrader.gdax.gdax_pipeline import GDAXPipeline
 
 class GDAXTrader(Trader):
         
-    def __init__(self):
-        Trader.__init__(self)
-        self.balance = 1000
+    def __init__(self, is_test):
+        Trader.__init__(self, is_test)
+        if is_test:
+            self.balance = 1000
+            self.assets = 0
+        else:
+            self.balance = self.fetch_balance()
+            self.assets = self.fetch_assets()
         
     def buy(self, percent_to_spend, market_value):
         if self.can_buy:
@@ -22,7 +27,7 @@ class GDAXTrader(Trader):
                 raise ValueError("Cannot buy a negative amount.")
                 
             #Determine how much USD will be spent
-            currency_to_spend = self.get_balance() * percent_to_spend
+            currency_to_spend = self.balance * percent_to_spend
             
             #TODO CHECK THAT CURRENCY TO SPEND IS ABOVE THE MARKET'S MINIMUM TRADE REQUIREMENT
             #if currency_to_spend > some hard coded number or fetched number
@@ -42,9 +47,9 @@ class GDAXTrader(Trader):
             
         #Determine how many assets will be sold
         if self.sell_all_assets:
-            assets_to_sell = self.get_assets()
+            assets_to_sell = self.assets
         else:
-            assets_to_sell = self.get_assets() * percent_to_sell
+            assets_to_sell = self.assets * percent_to_sell
         
         if assets_to_sell > 0:
             #Keep track internally of assets and balance, simulation purposes only
@@ -55,12 +60,32 @@ class GDAXTrader(Trader):
             
             print("Selling. Gained: "+str(assets_to_sell * market_value))
         
-    def get_balance(self):
-        #Todo, fetch wallet value from the exchange
-        return self.balance
+    def fetch_balance(self):
+        '''
+        Get the balance this trader has permission to spend in the exchange.
+        '''
+        
+        if self.is_test:
+            print("Warning: fetch_balance was called when trader is in test mode.")
+            return self.balance
+        else:
+            #Todo, fetch wallet value from the exchange
+            pass
+        
+    def fetch_assets(self):
+        '''
+        Get the number of assets this trader has permission to sell in the exchange.
+        '''
+        
+        if self.is_test:
+            print("Warning: fetch_assets was called when trader is in test mode.")
+            return self.assets
+        else:
+            #Todo, fetch assets from the exchange
+            pass
 
 #Allow this file to be run to trade on the GDAX
-trader = GDAXTrader()
+trader = GDAXTrader(True)
 history = CurrencyHistory(8, 13)
 history.attach_observer(MarketChangeObserver(trader))
 
