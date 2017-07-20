@@ -3,7 +3,6 @@
 '''
 
 from cryptotrader.marketforecast.queue import Queue
-from datetime import time
 
 class Trend(object):
 
@@ -22,7 +21,7 @@ class Trend(object):
         
     def has_enough_data(self):
         '''
-        Returns true if this Trend has enough data points to calculate a moving average of
+        Returns true if this Trend has enough data points to calculate a simple moving average of
         the length specified when initialized.
         '''
         
@@ -44,12 +43,13 @@ class Trend(object):
             if timestamp < self._timestamps.peek():
                 print("Precondition violated. add_data_points expects data in a chronological order. " +str(timestamp) + " is before " + str(self._timestamps.peek()))
                 
+            #Remove old data point
             if timestamp - self._timestamps.peek() > self._ma_length_in_seconds:
                 self._timestamps.dequeue()
                 removing_from_ma = self._numbers_in_sum.dequeue()
                 self._sum_of_data -= removing_from_ma
         
-        
+        #Add new data point
         self._sum_of_data += value
         self._numbers_in_sum.enqueue(value)
         self._timestamps.enqueue(timestamp)
