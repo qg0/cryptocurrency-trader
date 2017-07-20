@@ -10,13 +10,14 @@ class Trader(object):
     
     __metaclass__ = ABCMeta
     
-    def __init__(self, is_test):
+    def __init__(self, is_test, minimum_trade):
         print("Created a trader.")
         self.balance = None
         self.assets = None
         self.can_buy = True
         self.sell_all_assets = False
         self.is_test = is_test
+        self.minimum_trade = minimum_trade
         
         #When the market changes significantly this is how much to buy or sell
         self.percent_to_spend_on_buy = 0.20

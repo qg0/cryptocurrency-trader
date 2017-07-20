@@ -11,8 +11,8 @@ from cryptotrader.gdax.gdax_pipeline import GDAXPipeline
 
 class GDAXTrader(Trader):
         
-    def __init__(self, is_test):
-        Trader.__init__(self, is_test)
+    def __init__(self, is_test, minimum_trade):
+        Trader.__init__(self, is_test, minimum_trade)
         if is_test:
             self.balance = 1000
             self.assets = 0
@@ -26,19 +26,21 @@ class GDAXTrader(Trader):
             if percent_to_spend < 0:
                 raise ValueError("Cannot buy a negative amount.")
                 
-            #Determine how much USD will be spent
+            #Determine how much will be spent
             currency_to_spend = self.balance * percent_to_spend
             
-            #TODO CHECK THAT CURRENCY TO SPEND IS ABOVE THE MARKET'S MINIMUM TRADE REQUIREMENT
-            #if currency_to_spend > some hard coded number or fetched number
-            
-            #Keep track internally of assets and balance, simulation purposes only
-            self.balance -= currency_to_spend
-            self.assets += currency_to_spend / market_value
-            
-            #Send order to the exchange
-            
-            print("Buying. Spent: "+str(currency_to_spend))
+            if currency_to_spend > self.minimum_trade:
+                #Keep track internally of assets and balance alloted to this bot
+                self.balance -= currency_to_spend
+                self.assets += currency_to_spend / market_value
+                
+                if not self.is_test:
+                    #Todo, Send order to the exchange
+                    pass
+                
+                print("Buying. Spent: "+str(currency_to_spend))
+            else:
+                print("Not enough balance to buy.")
         
     def sell(self, percent_to_sell, market_value):
         #Guarantee the amount is positive
@@ -56,7 +58,7 @@ class GDAXTrader(Trader):
             self.assets -= assets_to_sell
             self.balance += assets_to_sell * market_value
             
-            #Send order to the exchange
+            #Todo, Send order to the exchange
             
             print("Selling. Gained: "+str(assets_to_sell * market_value))
         
@@ -84,39 +86,44 @@ class GDAXTrader(Trader):
             #Todo, fetch assets from the exchange
             pass
 
-#Allow this file to be run to trade on the GDAX
-trader = GDAXTrader(True)
-history = CurrencyHistory(8, 13)
-history.attach_observer(MarketChangeObserver(trader))
-
-#Historical Data Test
-historical_data = GDAXPipeline().load_historical_data()
-
-end_value = 0
-trader.can_buy = False
-for index in range(0, len(historical_data[0])-950000):
-    value = historical_data[0][index]
-    #Exclude abnormal valuations.
-    if value < trader.outlier_threshold:
-        history.adjust(value, historical_data[1][index])
-        
-trader.can_buy = True
-for index in range(len(historical_data[0])-950000, len(historical_data[0])-50000):
-    value = historical_data[0][index]
-    #Exclude abnormal valuations.
-    if value < trader.outlier_threshold:
-        history.adjust(value, historical_data[1][index])
-trader.can_buy = False
-trader.sell_all_assets = True
-for index in range(len(historical_data[0])-50000, len(historical_data[0])):
-    value = historical_data[0][index]
-    #Exclude abnormal valuations.
-    if value < trader.outlier_threshold:
-        history.adjust(value, historical_data[1][index])
-        end_value = value
-        
-print("Remaining Balance: " + str(trader.balance))
-print("Assets Value: " + str(trader.assets * end_value))
-print("Net: "+str(trader.balance+(trader.assets * end_value)-1000))
-
-print("Time elapsed (in seconds): "+str((historical_data[1][len(historical_data[0])-5001] - historical_data[1][len(historical_data[0])-950000])/1000.0))
+#Test the GDAX bot on historical data by running this file.
+if __name__ == "__main__":
+    trader = GDAXTrader(True, 30)
+    history = CurrencyHistory(5, 8)
+    history.attach_observer(MarketChangeObserver(trader))
+    
+    #Historical Data Test
+    historical_data = GDAXPipeline().load_historical_data()
+    
+    #Create the trends based on historical data.
+    trader.can_buy = False
+    #Skip the start of the data since it won't affect the moving averages.
+    for index in range(1000000, len(historical_data[0])-2000000):
+        value = historical_data[0][index]
+        if value < trader.outlier_threshold:
+            history.adjust(value, historical_data[1][index])
+            
+    #Trade using the trends on data closer to the present.
+    trader.can_buy = True
+    for index in range(len(historical_data[0])-2000000, len(historical_data[0])-100000):
+        value = historical_data[0][index]
+        if value < trader.outlier_threshold:
+            history.adjust(value, historical_data[1][index])
+            
+    #Stop and give the trader enough time to find a moment to sell but save the last
+    #recorded valuation just in case assets' value needs to be calculated.
+    trader.can_buy = False
+    trader.sell_all_assets = True
+    end_value = 0
+    
+    for index in range(len(historical_data[0])-100000, len(historical_data[0])):
+        value = historical_data[0][index]
+        #Exclude abnormal valuations.
+        if value < trader.outlier_threshold:
+            history.adjust(value, historical_data[1][index])
+            end_value = value
+            
+    print("Remaining Balance: " + str(trader.balance))
+    print("Assets Value: " + str(trader.assets * end_value))
+    print("Net: "+str(trader.balance+(trader.assets * end_value)-1000))
+    print("Time elapsed (in seconds): "+str((historical_data[1][len(historical_data[0])-100000] - historical_data[1][len(historical_data[0])-3000000])/1000.0))
