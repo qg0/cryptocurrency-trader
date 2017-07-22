@@ -89,26 +89,41 @@ class GDAXTrader(Trader):
 #Test the GDAX bot on historical data by running this file.
 if __name__ == "__main__":
     trader = GDAXTrader(True, 30)
-    history = CurrencyHistory(5, 10)
-    history.attach_observer(MarketChangeObserver(trader))
     
     #Historical Data Test
     historical_data = GDAXPipeline().load_historical_data()
     
     #Create the trends based on historical data.
     trader.can_buy = False
-    #Skip the start of the data since it won't affect the moving averages.
+    
+    #Average difference between timestamps = how often data is saved, and how often it should be processed
+    seconds_between_timestamps = 0
+    entries_processed = 0
+    for index in range(999990, 1000000):
+        entries_processed += 1
+        delta = historical_data[1][index] - historical_data[1][index-1]
+        seconds_between_timestamps = (seconds_between_timestamps + delta) / entries_processed
+    
+    data_points_per_minute = 60 / seconds_between_timestamps #Potential off by one error here
+    
+    #Initial EMA in testing mode is just zero since the history object is passed historical data to
+    #calculate the EMA anyway. In a real scenario it should be fetched from another platform.
+    initial_ema = 0
+    history = CurrencyHistory(initial_ema, 2, initial_ema, 8, data_points_per_minute)
+    history.attach_observer(MarketChangeObserver(trader))
+    
+    #Calculate the EMA
     for index in range(1000000, len(historical_data[0])-2000000):
         value = historical_data[0][index]
         if value < trader.outlier_threshold:
-            history.adjust(value, historical_data[1][index])
+            history.adjust(value)
             
     #Trade using the trends on data closer to the present.
     trader.can_buy = True
     for index in range(len(historical_data[0])-2000000, len(historical_data[0])-100000):
         value = historical_data[0][index]
         if value < trader.outlier_threshold:
-            history.adjust(value, historical_data[1][index])
+            history.adjust(value)
             
     #Stop and give the trader enough time to find a moment to sell but save the last
     #recorded valuation just in case assets' value needs to be calculated.
@@ -120,7 +135,7 @@ if __name__ == "__main__":
         value = historical_data[0][index]
         #Exclude abnormal valuations.
         if value < trader.outlier_threshold:
-            history.adjust(value, historical_data[1][index])
+            history.adjust(value)
             end_value = value
             
     print("Remaining Balance: " + str(trader.balance))

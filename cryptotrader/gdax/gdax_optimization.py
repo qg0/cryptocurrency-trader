@@ -20,30 +20,45 @@ def optimize_gdax_moving_average_length():
         short_lengths = []
         long_lengths = []
         
-        for long_term_length in range(2, 31):
-            for short_term_length in range(long_term_length/2, long_term_length):
+        for long_term_length in range(2, 21):
+            for short_term_length in range(1, long_term_length):
                 
                 print("Long: "+str(long_term_length)+" Short: "+str(short_term_length))
                 
                 trader = GDAXTrader(True, 30)
-                history = CurrencyHistory(short_term_length, long_term_length)
-                observer = WeighedMarketObserver(trader, losses_weight)
-                history.attach_observer(observer)
                 
                 #Create the trends based on historical data.
                 trader.can_buy = False
-                #Skip the start of the data since it won't affect the moving averages.
+                
+                #Average difference between timestamps = how often data is saved, and how often it should be processed
+                seconds_between_timestamps = 0
+                entries_processed = 0
+                for index in range(999990, 1000000):
+                    entries_processed += 1
+                    delta = historical_data[1][index] - historical_data[1][index-1]
+                    seconds_between_timestamps = (seconds_between_timestamps + delta) / entries_processed
+                
+                data_points_per_minute = 60 / seconds_between_timestamps #Potential off by one error here
+                
+                #Initial EMA in testing mode is just zero since the history object is passed historical data to
+                #calculate the EMA anyway. In a real scenario it should be fetched from another platform.
+                initial_ema = 0
+                history = CurrencyHistory(initial_ema, short_term_length, initial_ema, long_term_length, data_points_per_minute)
+                observer = WeighedMarketObserver(trader, losses_weight)
+                history.attach_observer(observer)
+    
+                #Calculate the EMA
                 for index in range(1000000, len(historical_data[0])-3000000):
                     value = historical_data[0][index]
                     if value < trader.outlier_threshold:
-                        history.adjust(value, historical_data[1][index])
+                        history.adjust(value)
                         
                 #Trade using the trends on data closer to the present.
                 trader.can_buy = True
                 for index in range(len(historical_data[0])-3000000, len(historical_data[0])-100000):
                     value = historical_data[0][index]
                     if value < trader.outlier_threshold:
-                        history.adjust(value, historical_data[1][index])
+                        history.adjust(value)
                         
                 #Stop and give the trader enough time to find a moment to sell.
                 trader.can_buy = False
@@ -53,7 +68,7 @@ def optimize_gdax_moving_average_length():
                     value = historical_data[0][index]
                     #Exclude abnormal valuations.
                     if value < trader.outlier_threshold:
-                        history.adjust(value, historical_data[1][index])
+                        history.adjust(value)
                 
                 scores.append(observer.weighed_net)
                 i = len(scores)-1

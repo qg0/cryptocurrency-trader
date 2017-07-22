@@ -9,32 +9,37 @@ from cryptotrader.marketforecast.trend import Trend
 
 class CurrencyHistory(object):
     
-    def __init__(self, short_term_length, long_term_length):
+    def __init__(self, short_term_ema, short_term_length, long_term_ema, long_term_length, data_points_per_minute):
         '''
+        short_term_ema and long_term_ema are the exponential moving averages for the currency
+        this object is going to track.
+        
         short_term_length and long_term_length are measured in days.
+        
+        data_points_per_minute is how many times adjust() is expected to be called in a minute.
         '''
         
         print("Created currency history tracker.")
         
         self._observers = []
         
-        self.long_term_trend = Trend(short_term_length)
-        self.short_term_trend = Trend(long_term_length)
+        self.long_term_trend = Trend(short_term_ema, short_term_length, data_points_per_minute)
+        self.short_term_trend = Trend(long_term_ema, long_term_length, data_points_per_minute)
         self.long_is_above_short = None
 
-    def adjust(self, value, timestamp):
+    def adjust(self, value):
         '''
         Determine the long term and short term trends by using a moving average.
         Sell when the long term average is higher than the short term average.
         Buy when the short term average is higher than the long term average.
         
-        This strategy is known as a moving average exponential crossover.
+        This strategy is known as the double crossover method.
         '''
  
-        self.long_term_trend.add_data_point(value, timestamp)
-        self.short_term_trend.add_data_point(value, timestamp)
+        self.long_term_trend.add_data_point(value)
+        self.short_term_trend.add_data_point(value)
         
-        if self.long_is_above_short is None and self.long_term_trend.has_enough_data():
+        if self.long_is_above_short is None:
             self.long_is_above_short = self.long_term_trend.get_moving_average() > self.short_term_trend.get_moving_average()
         else:
             long_ma = self.long_term_trend.get_moving_average()
