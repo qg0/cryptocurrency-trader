@@ -1,25 +1,11 @@
 '''
-CurrencyHistory is constructed with historical market data and predicts future values.
+CurrencyHistory is constructed with moving averages and notifies observers when significant changes occur.
 It contains methods to keep its data up to date as time goes on.
 
 @author: Tobias Carryer
 '''
 
-from cryptotrader.marketforecast.queue import Queue
 from cryptotrader.marketforecast.trend import Trend
-
-#Numbers could be optimized using machine learning
-#Percent of entries that will be considered "in the past"
-archive_percentage = 0.8
-
-#Number of data points needed before allowing a decision to be made.
-minimum_data_points = 100 
-
-#Minimum sum of common differences (recent or archived, not both) before allowing a decision to be made
-minimum_common_difference = 0.8
-
-#Percent needed before changing market position
-diversion_required = 0.9
 
 class CurrencyHistory(object):
     
@@ -35,9 +21,6 @@ class CurrencyHistory(object):
         self.long_term_trend = Trend(short_term_length)
         self.short_term_trend = Trend(long_term_length)
         self.long_is_above_short = None
-        
-    def percentage_of_numbers_in_archive(self):
-        return self.archive_size / (self.archive_size + float(self.numbers_in_recent.size()))
 
     def adjust(self, value, timestamp):
         '''
