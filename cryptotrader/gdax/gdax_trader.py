@@ -89,7 +89,7 @@ class GDAXTrader(Trader):
 #Test the GDAX bot on historical data by running this file.
 if __name__ == "__main__":
     trader = GDAXTrader(True, 30)
-    history = CurrencyHistory(5, 8)
+    history = CurrencyHistory(5, 10)
     history.attach_observer(MarketChangeObserver(trader))
     
     #Historical Data Test
