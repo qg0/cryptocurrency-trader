@@ -141,4 +141,4 @@ if __name__ == "__main__":
     print("Remaining Balance: " + str(trader.balance))
     print("Assets Value: " + str(trader.assets * end_value))
     print("Net: "+str(trader.balance+(trader.assets * end_value)-1000))
-    print("Time elapsed (in seconds): "+str((historical_data[1][len(historical_data[0])-100000] - historical_data[1][len(historical_data[0])-3000000])/1000.0))
+     print("Time elapsed (in seconds): "+str((historical_data[1][len(historical_data[0])-100000] - historical_data[1][len(historical_data[0])-3000000])))
