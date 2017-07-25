@@ -53,7 +53,7 @@ def load_historical_data():
         return [values, timestamps]
     
 class GDAXPipeline(object):
-    def __init__(self, on_market_value, product, auth=False, api_key="", api_secret="", api_passphrase=""):
+    def __init__(self, on_market_value, product):
         '''
         on_data_point is called every time a new data point is received from the websocket.
         on_data_point should have 2 parameters, websocket, and message.
@@ -77,10 +77,6 @@ class GDAXPipeline(object):
         self.stop = False
         self.ws = None
         self.thread = None
-        self.auth = auth
-        self.api_key = api_key
-        self.api_secret = api_secret
-        self.api_passphrase = api_passphrase
 
     def start(self):
         def _go():
@@ -94,21 +90,7 @@ class GDAXPipeline(object):
         if not isinstance(self.product, list):
             self.product = [self.product]
 
-        if self.url[-1] == "/":
-            self.url = self.url[:-1]
-
         sub_params = {'type': 'subscribe', 'product_ids': self.product}
-        if self.auth:
-            timestamp = str(time.time())
-            message = timestamp + 'GET' + '/users/self'
-            message = message.encode('ascii')
-            hmac_key = base64.b64decode(self.api_secret)
-            signature = hmac.new(hmac_key, message, hashlib.sha256)
-            signature_b64 = base64.b64encode(signature.digest())
-            sub_params['signature'] = signature_b64
-            sub_params['key'] = self.api_key
-            sub_params['passphrase'] = self.api_passphrase
-            sub_params['timestamp'] = timestamp
 
         self.ws = create_connection(self.url)
         self.ws.send(json.dumps(sub_params))
