@@ -131,7 +131,7 @@ class GDAXPipeline(object):
                 elif msg["type"] == "heartbeat":
                     #The same value is likely to be sent multiple times so there are
                     #60 data points per minute
-                    self.on_market_value(self.last_market_value)
+                    self.on_market_value(float(self.last_market_value))
                 elif msg["type"] == "error":
                     print(msg["message"])
                     print("CLOSING WEBSOCKET")
