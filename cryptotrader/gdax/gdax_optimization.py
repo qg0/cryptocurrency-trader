@@ -7,10 +7,10 @@ Machine learning techniques in functions to optimize the GDAX traders.
 from cryptotrader.marketforecast.weighed_market_observer import WeighedMarketObserver
 from cryptotrader.marketforecast.currency_history import CurrencyHistory
 from cryptotrader.gdax.gdax_trader import GDAXTrader
-from cryptotrader.gdax.gdax_pipeline import GDAXPipeline
+from cryptotrader.gdax.gdax_pipeline import load_historical_data
 
 def optimize_gdax_moving_average_length():
-    historical_data = GDAXPipeline().load_historical_data()
+    historical_data = load_historical_data()
     
     output = ""
     

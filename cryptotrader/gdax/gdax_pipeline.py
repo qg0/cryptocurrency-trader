@@ -4,11 +4,19 @@ Loads data from GDAX.
 @author: Tobias Carryer
 '''
 
-class GDAXPipeline(object):
-    def __init__(self):
-        print("Created GDAX pipeline.")
-        
-    def load_historical_data(self):
+import json
+import base64
+import hmac
+import hashlib
+import time
+from threading import Thread
+import urllib2
+
+#Requires websocket-client from https://github.com/websocket-client/websocket-client
+from cryptotrader.librariesrequired.websocket import create_connection, WebSocketConnectionClosedException
+import cryptotrader
+
+def load_historical_data():
         '''
         Pre: Historical data is in chronological order.
         '''
@@ -43,7 +51,105 @@ class GDAXPipeline(object):
         print("Finished loading historical data.")
         
         return [values, timestamps]
+    
+class GDAXPipeline(object):
+    def __init__(self, on_market_value, product, auth=False, api_key="", api_secret="", api_passphrase=""):
+        '''
+        on_data_point is called every time a new data point is received from the websocket.
+        on_data_point should have 2 parameters, websocket, and message.
+        message["price"] can be used to get the currency price of product.
         
-    def load_real_time_data(self):
-        while True:
-            print("Real time data loading")
+        Pre: product is not a list
+        '''
+        
+        print("Created GDAX pipeline. Uses GDAX's websocket API.")
+        
+        self.on_market_value = on_market_value
+        self.url = "wss://ws-feed.gdax.com"
+        self.product = product.lower()
+        
+        #GET Request the API to get the current value
+        #Value is only set when it changes so multiple seconds could pass without
+        #calling on_market_value if this is not done
+        ticker = urllib2.urlopen("https://api.gdax.com/products/"+product+"/ticker").read()
+        self.last_market_value = json.loads(ticker)["price"]
+        
+        self.stop = False
+        self.ws = None
+        self.thread = None
+        self.auth = auth
+        self.api_key = api_key
+        self.api_secret = api_secret
+        self.api_passphrase = api_passphrase
+
+    def start(self):
+        def _go():
+            self._connect()
+            self._listen()
+
+        self.thread = Thread(target=_go)
+        self.thread.start()
+
+    def _connect(self):
+        if not isinstance(self.product, list):
+            self.product = [self.product]
+
+        if self.url[-1] == "/":
+            self.url = self.url[:-1]
+
+        sub_params = {'type': 'subscribe', 'product_ids': self.product}
+        if self.auth:
+            timestamp = str(time.time())
+            message = timestamp + 'GET' + '/users/self'
+            message = message.encode('ascii')
+            hmac_key = base64.b64decode(self.api_secret)
+            signature = hmac.new(hmac_key, message, hashlib.sha256)
+            signature_b64 = base64.b64encode(signature.digest())
+            sub_params['signature'] = signature_b64
+            sub_params['key'] = self.api_key
+            sub_params['passphrase'] = self.api_passphrase
+            sub_params['timestamp'] = timestamp
+
+        self.ws = create_connection(self.url)
+        self.ws.send(json.dumps(sub_params))
+        self.ws.send(json.dumps({"type": "heartbeat", "on": True}))
+        
+    def _listen(self):
+        while not self.stop:
+            try:
+                if int(time.time() % 30) == 0:
+                    # Set a 30 second ping to keep connection alive
+                    self.ws.ping("keepalive")
+                msg = json.loads(self.ws.recv())
+            except Exception as e:
+                print(e)
+            else:
+                
+                if msg["type"] == "match":
+                    #A buy order was matched with a sell order so the price changed
+                    self.last_market_value = msg["price"]
+                elif msg["type"] == "heartbeat":
+                    #The same value is likely to be sent multiple times so there are
+                    #60 data points per minute
+                    self.on_market_value(self.last_market_value)
+                elif msg["type"] == "error":
+                    print(msg["message"])
+                    print("CLOSING WEBSOCKET")
+                    self.close()
+
+    def close(self):
+        if not self.stop:
+            self.stop = True
+            try:
+                if self.ws:
+                    self.ws.send(json.dumps({"type": "heartbeat", "on": False}))
+                    self.ws.close()
+            except WebSocketConnectionClosedException as e:
+                print("WebSocketConnectionClosedException: " + e)
+
+if __name__ == "__main__":
+    def on_market_value(value):
+        print("on_market_value was called with value: "+str(value))
+        
+    pipeline = GDAXPipeline(on_market_value, "ETH-BTC")
+    pipeline.start()
