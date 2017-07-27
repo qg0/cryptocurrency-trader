@@ -4,8 +4,8 @@ Machine learning techniques in functions to optimize the GDAX traders.
 @author: Tobias Carryer
 '''
 
-from cryptotrader.marketforecast.weighed_market_observer import WeighedMarketObserver
-from cryptotrader.marketforecast.currency_history import CurrencyHistory
+from cryptotrader.tradesignals.weighed_market_change_observer import WeighedMarketObserver
+from cryptotrader.tradesignals.moving_average_strategy import MovingAverageStrategy
 from cryptotrader.gdax.gdax_trader import GDAXTrader
 from cryptotrader.gdax.gdax_pipeline import load_historical_data
 
@@ -43,7 +43,7 @@ def optimize_gdax_moving_average_length():
                 #Initial EMA in testing mode is just zero since the history object is passed historical data to
                 #calculate the EMA anyway. In a real scenario it should be fetched from another platform.
                 initial_ema = 0
-                history = CurrencyHistory(initial_ema, short_term_length, initial_ema, long_term_length, data_points_per_minute)
+                history = MovingAverageStrategy(initial_ema, short_term_length, initial_ema, long_term_length, data_points_per_minute)
                 observer = WeighedMarketObserver(trader, losses_weight)
                 history.attach_observer(observer)
     

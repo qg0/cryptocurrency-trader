@@ -4,10 +4,10 @@ Makes sure all the other general classes work on the GDAX.
 @author: Tobias Carryer
 '''
 
-from cryptotrader.marketforecast.market_change_observer import MarketChangeObserver
-from cryptotrader.marketforecast.currency_history import CurrencyHistory
+from cryptotrader.tradesignals.market_change_observer import MarketChangeObserver
+from cryptotrader.tradesignals.moving_average_strategy import MovingAverageStrategy
 from cryptotrader.trader import Trader
-from cryptotrader.gdax.gdax_pipeline import GDAXPipeline
+from cryptotrader.gdax.gdax_pipeline import GDAXPipeline, load_historical_data
 
 class GDAXTrader(Trader):
         
@@ -25,7 +25,7 @@ class GDAXTrader(Trader):
             #Guarantee the amount is positive
             if percent_to_spend < 0:
                 raise ValueError("Cannot buy a negative amount.")
-                
+            
             #Determine how much will be spent
             currency_to_spend = self.balance * percent_to_spend
             
@@ -33,7 +33,7 @@ class GDAXTrader(Trader):
                 #Keep track internally of assets and balance alloted to this bot
                 self.balance -= currency_to_spend
                 self.assets += currency_to_spend / market_value
-                
+
                 if not self.is_test:
                     #Todo, Send order to the exchange
                     pass
@@ -88,11 +88,13 @@ class GDAXTrader(Trader):
 
 #Test the GDAX bot on historical data by running this file.
 if __name__ == "__main__":
+    
+    #Historical data test
     trader = GDAXTrader(True, 30)
-    
+      
     #Historical Data Test
-    historical_data = GDAXPipeline().load_historical_data()
-    
+    historical_data = load_historical_data()
+     
     #Create the trends based on historical data.
     trader.can_buy = False
     
@@ -104,12 +106,12 @@ if __name__ == "__main__":
         delta = historical_data[1][index] - historical_data[1][index-1]
         seconds_between_timestamps = (seconds_between_timestamps + delta) / entries_processed
     
-    data_points_per_minute = 60 / seconds_between_timestamps #Potential off by one error here
+    data_points_per_minute = 60 / seconds_between_timestamps
     
     #Initial EMA in testing mode is just zero since the history object is passed historical data to
     #calculate the EMA anyway. In a real scenario it should be fetched from another platform.
     initial_ema = 0
-    history = CurrencyHistory(initial_ema, 2, initial_ema, 8, data_points_per_minute)
+    history = MovingAverageStrategy(initial_ema, 2, initial_ema, 8, data_points_per_minute)
     history.attach_observer(MarketChangeObserver(trader))
     
     #Calculate the EMA
@@ -141,4 +143,4 @@ if __name__ == "__main__":
     print("Remaining Balance: " + str(trader.balance))
     print("Assets Value: " + str(trader.assets * end_value))
     print("Net: "+str(trader.balance+(trader.assets * end_value)-1000))
-     print("Time elapsed (in seconds): "+str((historical_data[1][len(historical_data[0])-100000] - historical_data[1][len(historical_data[0])-3000000])))
+    print("Time elapsed (in seconds): "+str((historical_data[1][len(historical_data[0])-100000] - historical_data[1][len(historical_data[0])-3000000])))

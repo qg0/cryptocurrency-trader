@@ -2,26 +2,24 @@
 @author: Tobias Carryer
 '''
 
-from cryptotrader.marketforecast.queue import Queue
-
-class Trend(object):
+class MovingAverage(object):
 
     def __init__(self, initial_ema, moving_average_length, data_points_per_minute):
         '''
-        initial_ema is the exponential moving average the instant the Trend was created.
+        initial_ema is the exponential moving average the instant the MovingAverage was created.
         
-        moving_average_length is how many days should be taken into consideration
+        moving_average_length is how many minutes should be taken into consideration
         when calculating the MA.
         
         data_points_per_minute is how many times add_data_point() is expected to
         be called in a minute.
         '''
         
-        print("Created trend assistant.")
+        print("Created moving average assistant.")
         
         self.ema = initial_ema
         
-        number_of_data_points = moving_average_length * 24 * 60 * data_points_per_minute #Hours, minutes, seconds
+        number_of_data_points = 24 * moving_average_length * data_points_per_minute #Hours, minutes, seconds
         self._ema_multiplier = 2 / (number_of_data_points + 1)
         
     def get_moving_average(self):

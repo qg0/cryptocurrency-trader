@@ -1,5 +1,5 @@
 '''
-Observes when data is added to CurrencyHistory.
+Observes when a strategy says to buy or sell.
 
 @author Tobias Carryer
 '''

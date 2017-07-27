@@ -5,9 +5,10 @@ It contains methods to keep its data up to date as time goes on.
 @author: Tobias Carryer
 '''
 
-from cryptotrader.marketforecast.trend import Trend
+from cryptotrader.tradesignals.strategy import Strategy
+from cryptotrader.tradesignals.moving_average import MovingAverage
 
-class CurrencyHistory(object):
+class MovingAverageStrategy(Strategy):
     
     def __init__(self, short_term_ema, short_term_length, long_term_ema, long_term_length, data_points_per_minute):
         '''
@@ -19,12 +20,12 @@ class CurrencyHistory(object):
         data_points_per_minute is how many times adjust() is expected to be called in a minute.
         '''
         
-        print("Created currency history tracker.")
+        Strategy.__init__(self)
         
-        self._observers = []
+        print("Created MovingAverageStrategy.")
         
-        self.long_term_trend = Trend(short_term_ema, short_term_length, data_points_per_minute)
-        self.short_term_trend = Trend(long_term_ema, long_term_length, data_points_per_minute)
+        self.long_term_trend = MovingAverage(short_term_ema, short_term_length, data_points_per_minute)
+        self.short_term_trend = MovingAverage(long_term_ema, long_term_length, data_points_per_minute)
         self.long_is_above_short = None
 
     def adjust(self, value):
@@ -45,24 +46,10 @@ class CurrencyHistory(object):
             long_ma = self.long_term_trend.get_moving_average()
             short_ma = self.short_term_trend.get_moving_average()
 
-            #Trend lines crossed
+            #MovingAverage lines crossed
             if self.long_is_above_short and short_ma > long_ma:
                 self.notify_observers(True, value)
                 self.long_is_above_short = False
             elif not self.long_is_above_short and long_ma > short_ma:
                 self.notify_observers(False, value)
                 self.long_is_above_short = True
-        
-    def attach_observer(self, observer):
-        '''
-        Post: Observer will be notified when new data is passed to CurrencyHistory.
-        Throws: ValueError if observer is None
-        '''
-        
-        if observer == None:
-            raise ValueError("observer cannot be None")
-        self._observers.append(observer)
-        
-    def notify_observers(self, should_buy, market_value):
-        for observer in self._observers:
-            observer.notify_significant_change(should_buy, market_value)
