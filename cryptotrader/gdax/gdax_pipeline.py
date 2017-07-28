@@ -5,16 +5,12 @@ Loads data from GDAX.
 '''
 
 import json
-import base64
-import hmac
-import hashlib
 import time
 from threading import Thread
 import urllib2
 
 #Requires websocket-client from https://github.com/websocket-client/websocket-client
 from cryptotrader.librariesrequired.websocket import create_connection, WebSocketConnectionClosedException
-import cryptotrader
 
 def load_historical_data():
         '''
