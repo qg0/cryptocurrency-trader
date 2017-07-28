@@ -43,22 +43,22 @@ def optimize_gdax_moving_average_length():
                 #Initial EMA in testing mode is just zero since the history object is passed historical data to
                 #calculate the EMA anyway. In a real scenario it should be fetched from another platform.
                 initial_ema = 0
-                history = MovingAverageStrategy(initial_ema, short_term_length, initial_ema, long_term_length, data_points_per_minute)
+                strategy = MovingAverageStrategy(initial_ema, short_term_length, initial_ema, long_term_length, data_points_per_minute)
                 observer = WeighedMarketObserver(trader, losses_weight)
-                history.attach_observer(observer)
+                strategy.attach_observer(observer)
     
                 #Calculate the EMA
                 for index in range(1000000, len(historical_data[0])-3000000):
                     value = historical_data[0][index]
                     if value < trader.outlier_threshold:
-                        history.adjust(value)
+                        strategy.adjust(value)
                         
                 #Trade using the trends on data closer to the present.
                 trader.can_buy = True
                 for index in range(len(historical_data[0])-3000000, len(historical_data[0])-100000):
                     value = historical_data[0][index]
                     if value < trader.outlier_threshold:
-                        history.adjust(value)
+                        strategy.adjust(value)
                         
                 #Stop and give the trader enough time to find a moment to sell.
                 trader.can_buy = False
@@ -68,7 +68,7 @@ def optimize_gdax_moving_average_length():
                     value = historical_data[0][index]
                     #Exclude abnormal valuations.
                     if value < trader.outlier_threshold:
-                        history.adjust(value)
+                        strategy.adjust(value)
                 
                 scores.append(observer.weighed_net)
                 i = len(scores)-1

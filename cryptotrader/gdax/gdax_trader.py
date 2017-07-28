@@ -111,21 +111,21 @@ if __name__ == "__main__":
     #Initial EMA in testing mode is just zero since the history object is passed historical data to
     #calculate the EMA anyway. In a real scenario it should be fetched from another platform.
     initial_ema = 0
-    history = MovingAverageStrategy(initial_ema, 2, initial_ema, 8, data_points_per_minute)
-    history.attach_observer(MarketChangeObserver(trader))
+    strategy = MovingAverageStrategy(initial_ema, 2, initial_ema, 8, data_points_per_minute)
+    strategy.attach_observer(MarketChangeObserver(trader))
     
     #Calculate the EMA
     for index in range(1000000, len(historical_data[0])-2000000):
         value = historical_data[0][index]
         if value < trader.outlier_threshold:
-            history.adjust(value)
+            strategy.adjust(value)
             
     #Trade using the trends on data closer to the present.
     trader.can_buy = True
     for index in range(len(historical_data[0])-2000000, len(historical_data[0])-100000):
         value = historical_data[0][index]
         if value < trader.outlier_threshold:
-            history.adjust(value)
+            strategy.adjust(value)
             
     #Stop and give the trader enough time to find a moment to sell but save the last
     #recorded valuation just in case assets' value needs to be calculated.
@@ -137,7 +137,7 @@ if __name__ == "__main__":
         value = historical_data[0][index]
         #Exclude abnormal valuations.
         if value < trader.outlier_threshold:
-            history.adjust(value)
+            strategy.adjust(value)
             end_value = value
             
     print("Remaining Balance: " + str(trader.balance))
