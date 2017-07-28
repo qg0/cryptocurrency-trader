@@ -40,7 +40,7 @@ def optimize_gdax_moving_average_length():
                 
                 data_points_per_minute = 60 / seconds_between_timestamps #Potential off by one error here
                 
-                #Initial EMA in testing mode is just zero since the history object is passed historical data to
+                #Initial EMA in testing mode is just zero since the strategy is passed historical data to
                 #calculate the EMA anyway. In a real scenario it should be fetched from another platform.
                 initial_ema = 0
                 strategy = MovingAverageStrategy(initial_ema, short_term_length, initial_ema, long_term_length, data_points_per_minute)

@@ -1,6 +1,5 @@
 '''
-CurrencyHistory is constructed with moving averages and notifies observers when significant changes occur.
-It contains methods to keep its data up to date as time goes on.
+This strategy notifies observers when short and long term MAs cross.
 
 @author: Tobias Carryer
 '''

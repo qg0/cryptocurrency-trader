@@ -108,7 +108,7 @@ if __name__ == "__main__":
     
     data_points_per_minute = 60 / seconds_between_timestamps
     
-    #Initial EMA in testing mode is just zero since the history object is passed historical data to
+    #Initial EMA in testing mode is just zero since the strategy is passed historical data to
     #calculate the EMA anyway. In a real scenario it should be fetched from another platform.
     initial_ema = 0
     strategy = MovingAverageStrategy(initial_ema, 2, initial_ema, 8, data_points_per_minute)
