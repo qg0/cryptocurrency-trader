@@ -11,6 +11,6 @@ class MarketChangeObserver(object):
     
     def notify_significant_change(self, should_buy, market_value):
         if should_buy:
-            self.trader.buy(self.trader.percent_to_spend_on_buy, market_value)
+            self.trader.buy(market_value)
         else:
-            self.trader.sell(self.trader.percent_of_assets_to_sell, market_value)
+            self.trader.sell(market_value)

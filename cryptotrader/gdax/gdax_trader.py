@@ -20,14 +20,10 @@ class GDAXTrader(Trader):
             self.balance = self.fetch_balance()
             self.assets = self.fetch_assets()
         
-    def buy(self, percent_to_spend, market_value):
+    def buy(self, market_value):
         if self.can_buy:
-            #Guarantee the amount is positive
-            if percent_to_spend < 0:
-                raise ValueError("Cannot buy a negative amount.")
-            
             #Determine how much will be spent
-            currency_to_spend = self.balance * percent_to_spend
+            currency_to_spend = self.balance
             
             if currency_to_spend > self.minimum_trade:
                 #Keep track internally of assets and balance alloted to this bot
@@ -42,16 +38,9 @@ class GDAXTrader(Trader):
             else:
                 print("Not enough balance to buy.")
         
-    def sell(self, percent_to_sell, market_value):
-        #Guarantee the amount is positive
-        if percent_to_sell < 0:
-            raise ValueError("Cannot buy a negative amount.")
-            
+    def sell(self, market_value):   
         #Determine how many assets will be sold
-        if self.sell_all_assets:
-            assets_to_sell = self.assets
-        else:
-            assets_to_sell = self.assets * percent_to_sell
+        assets_to_sell = self.assets
         
         if assets_to_sell > 0:
             #Keep track internally of assets and balance, simulation purposes only

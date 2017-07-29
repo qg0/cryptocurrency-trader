@@ -18,11 +18,11 @@ class WeighedMarketObserver(MarketChangeObserver):
     def notify_significant_change(self, should_buy, market_value):
         if should_buy:
             previous_balance = self.trader.balance
-            self.trader.buy(self.trader.percent_to_spend_on_buy, market_value)
+            self.trader.buy(market_value)
             self.spent_on_buys += previous_balance - self.trader.balance
         else:
             previous_balance = self.trader.balance
-            self.trader.sell(self.trader.percent_of_assets_to_sell, market_value)
+            self.trader.sell(market_value)
             delta = self.trader.balance - previous_balance
             self.spent_on_buys -= delta
             
