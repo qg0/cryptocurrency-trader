@@ -2,7 +2,7 @@
 @author Tobias Carryer
 '''
 
-from cryptotrader.tradesignals.market_change_observer import MarketChangeObserver
+from cryptotrader.tradesignals.observers import MarketChangeObserver
 
 class WeighedMarketObserver(MarketChangeObserver):
     '''

@@ -4,8 +4,8 @@ Machine learning techniques in functions to optimize the GDAX traders.
 @author: Tobias Carryer
 '''
 
-from cryptotrader.tradesignals.weighed_market_change_observer import WeighedMarketObserver
-from cryptotrader.tradesignals.moving_average_strategy import MovingAverageStrategy
+from cryptotrader.tradesignals.observers import WeighedMarketObserver
+from cryptotrader.tradesignals.strategies import MovingAverageStrategy
 from cryptotrader.gdax.gdax_trader import GDAXTrader
 from cryptotrader.gdax.gdax_pipeline import load_historical_data
 

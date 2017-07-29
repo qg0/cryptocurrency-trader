@@ -4,8 +4,8 @@ Makes sure all the other general classes work on the GDAX.
 @author: Tobias Carryer
 '''
 
-from cryptotrader.tradesignals.market_change_observer import MarketChangeObserver
-from cryptotrader.tradesignals.moving_average_strategy import MovingAverageStrategy
+from cryptotrader.tradesignals.observers import MarketChangeObserver
+from cryptotrader.tradesignals.strategies import MovingAverageStrategy
 from cryptotrader.trader import Trader
 from cryptotrader.gdax.gdax_pipeline import GDAXPipeline, load_historical_data
 

@@ -4,8 +4,8 @@ This strategy notifies observers when short and long term MAs cross.
 @author: Tobias Carryer
 '''
 
-from cryptotrader.tradesignals.strategy import Strategy
-from cryptotrader.tradesignals.exponential_moving_average import EMA
+from cryptotrader.tradesignals.strategies import Strategy
+from cryptotrader.tradesignals.indicators import EMA
 
 class MovingAverageStrategy(Strategy):
     
