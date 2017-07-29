@@ -5,7 +5,7 @@ This strategy notifies observers when short and long term MAs cross.
 '''
 
 from cryptotrader.tradesignals.strategy import Strategy
-from cryptotrader.tradesignals.moving_average import MovingAverage
+from cryptotrader.tradesignals.exponential_moving_average import EMA
 
 class MovingAverageStrategy(Strategy):
     
@@ -23,8 +23,8 @@ class MovingAverageStrategy(Strategy):
         
         print("Created MovingAverageStrategy.")
         
-        self.long_term_trend = MovingAverage(short_term_ema, short_term_length, data_points_per_minute)
-        self.short_term_trend = MovingAverage(long_term_ema, long_term_length, data_points_per_minute)
+        self.long_term_trend = EMA(short_term_ema, short_term_length, data_points_per_minute)
+        self.short_term_trend = EMA(long_term_ema, long_term_length, data_points_per_minute)
         self.long_is_above_short = None
 
     def adjust(self, value):

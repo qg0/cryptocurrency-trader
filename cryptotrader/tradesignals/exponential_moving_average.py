@@ -2,7 +2,7 @@
 @author: Tobias Carryer
 '''
 
-class MovingAverage(object):
+class EMA(object):
 
     def __init__(self, initial_ema, moving_average_length, data_points_per_minute):
         '''
@@ -15,7 +15,7 @@ class MovingAverage(object):
         be called in a minute.
         '''
         
-        print("Created moving average assistant.")
+        print("Created EMA assistant.")
         
         self.ema = initial_ema
         
