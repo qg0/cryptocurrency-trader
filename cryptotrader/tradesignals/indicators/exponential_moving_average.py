@@ -4,11 +4,11 @@
 
 class EMA(object):
 
-    def __init__(self, initial_ema, moving_average_length, data_points_per_minute):
+    def __init__(self, initial_ema, moving_average_length):
         '''
         initial_ema is the exponential moving average the instant the MovingAverage was created.
         
-        moving_average_length is how many minutes should be taken into consideration
+        moving_average_length is how many data points should be taken into consideration
         when calculating the MA.
         
         data_points_per_minute is how many times add_data_point() is expected to
@@ -17,14 +17,13 @@ class EMA(object):
         
         print("Created EMA assistant.")
         
-        self.ema = initial_ema
+        self._ema = initial_ema
         
-        number_of_data_points = 24 * moving_average_length * data_points_per_minute #Hours, minutes, seconds
-        self._ema_multiplier = 2 / (number_of_data_points + 1)
+        self._ema_multiplier = 2 / (moving_average_length + 1)
         
-    def get_moving_average(self):
-        return self.ema
+    def get(self):
+        return self._ema
     
     def add_data_point(self, value):
         #Weigh how much value changes the EMA so more recent values affect the EMA more.
-        self.ema = (value - self.ema) * self._ema_multiplier + self.ema 
+        self._ema = (value - self._ema) * self._ema_multiplier + self._ema

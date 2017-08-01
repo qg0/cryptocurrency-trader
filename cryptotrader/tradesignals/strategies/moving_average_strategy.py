@@ -23,8 +23,8 @@ class MovingAverageStrategy(Strategy):
         
         print("Created MovingAverageStrategy.")
         
-        self.long_term_trend = EMA(short_term_ema, short_term_length, data_points_per_minute)
-        self.short_term_trend = EMA(long_term_ema, long_term_length, data_points_per_minute)
+        self.long_term_trend = EMA(short_term_ema, 24*short_term_length*data_points_per_minute)
+        self.short_term_trend = EMA(long_term_ema, 24*long_term_length*data_points_per_minute)
         self.long_is_above_short = None
 
     def adjust(self, value):
@@ -40,10 +40,10 @@ class MovingAverageStrategy(Strategy):
         self.short_term_trend.add_data_point(value)
         
         if self.long_is_above_short is None:
-            self.long_is_above_short = self.long_term_trend.get_moving_average() > self.short_term_trend.get_moving_average()
+            self.long_is_above_short = self.long_term_trend.get() > self.short_term_trend.get()
         else:
-            long_ma = self.long_term_trend.get_moving_average()
-            short_ma = self.short_term_trend.get_moving_average()
+            long_ma = self.long_term_trend.get()
+            short_ma = self.short_term_trend.get()
 
             #MovingAverage lines crossed
             if self.long_is_above_short and short_ma > long_ma:
