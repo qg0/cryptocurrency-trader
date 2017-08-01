@@ -41,7 +41,11 @@ class StochasticOscillator(object):
                     low = l
                     
             #Calculate the oscillator reading
-            self._oscillator_reading = 100 * (close - low) / (high - low)
+            if high - low == 0:
+                #Prevent division by zero error
+                self._oscillator_reading = 0
+            else:
+                self._oscillator_reading = 100 * (close - low) / (high - low)
         
     def get(self):
         if self._oscillator_reading == None:
