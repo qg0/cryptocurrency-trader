@@ -1,4 +1,6 @@
-from exponential_moving_average import EMAfrom average_true_range import ATR
+from average_true_range import ATR
 from average_true_range import true_range
+from exponential_moving_average import EMA
 from average_directional_index import ADX
 from stop_and_reverse import SAR
+from stochastic_oscillator import StochasticOscillator
