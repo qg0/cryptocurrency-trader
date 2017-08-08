@@ -14,7 +14,7 @@ class GDAXTrader(Trader):
     def __init__(self, is_test, minimum_trade):
         Trader.__init__(self, is_test, minimum_trade)
         if is_test:
-            self.balance = 1000
+            self.balance = 100
             self.assets = 0
         else:
             self.balance = self.fetch_balance()
@@ -75,7 +75,6 @@ class GDAXTrader(Trader):
             #Todo, fetch assets from the exchange
             pass
 
-#Test the GDAX bot on historical data by running this file.
 if __name__ == "__main__":
     
     #Historical data test

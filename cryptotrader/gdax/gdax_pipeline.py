@@ -49,13 +49,17 @@ def load_historical_data():
         return [values, timestamps]
     
 class GDAXPipeline(object):
-    def __init__(self, on_market_value, product):
+    def __init__(self, on_market_value, product, minutes_to_reset=15):
         '''
         on_data_point is called every time a new data point is received from the websocket.
         on_data_point should have 2 parameters, websocket, and message.
         message["price"] can be used to get the currency price of product.
         
+        minutes_to_reset is used to force a disconnect and reconnect to the websocket
+        every so many minutes
+        
         Pre: product is not a list
+             minutes_to_reset is positive
         '''
         
         print("Created GDAX pipeline. Uses GDAX's websocket API.")
@@ -63,6 +67,8 @@ class GDAXPipeline(object):
         self.on_market_value = on_market_value
         self.url = "wss://ws-feed.gdax.com"
         self.product = product.lower()
+        self.seconds_to_reset = minutes_to_reset * 60 #Time in seconds
+        self._time_started = 0
         
         #GET Request the API to get the current value
         #Value is only set when it changes so multiple seconds could pass without
@@ -83,6 +89,11 @@ class GDAXPipeline(object):
         self.thread.start()
 
     def _connect(self):
+        '''
+        Post: self.ws is not None
+              self.stop == False
+        '''
+        
         if not isinstance(self.product, list):
             self.product = [self.product]
 
@@ -91,29 +102,37 @@ class GDAXPipeline(object):
         self.ws = create_connection(self.url)
         self.ws.send(json.dumps(sub_params))
         self.ws.send(json.dumps({"type": "heartbeat", "on": True}))
+        self._time_started = int(time.time())
+        self.stop = False
         
     def _listen(self):
         while not self.stop:
-            try:
-                if int(time.time() % 30) == 0:
-                    # Set a 30 second ping to keep connection alive
-                    self.ws.ping("keepalive")
-                msg = json.loads(self.ws.recv())
-            except Exception as e:
-                print(e)
+            #Force websocket reset every given amount of time
+            if int(time.time()) - self._time_started >= self.seconds_to_reset:
+                print("GDAXPipeline: Forcing websocket reconnect.")
+                self.close()
+                self._connect()
             else:
-                
-                if msg["type"] == "match":
-                    #A buy order was matched with a sell order so the price changed
-                    self.last_market_value = msg["price"]
-                elif msg["type"] == "heartbeat":
-                    #The same value is likely to be sent multiple times so there are
-                    #60 data points per minute
-                    self.on_market_value(float(self.last_market_value))
-                elif msg["type"] == "error":
-                    print(msg["message"])
-                    print("CLOSING WEBSOCKET")
-                    self.close()
+                try:
+                    if int(time.time() % 30) == 0:
+                        # Set a 30 second ping to keep connection alive
+                        self.ws.ping("keepalive")
+                    msg = json.loads(self.ws.recv())
+                except Exception as e:
+                    print(e)
+                else:
+                    
+                    if msg["type"] == "match":
+                        #A buy order was matched with a sell order so the price changed
+                        self.last_market_value = msg["price"]
+                    elif msg["type"] == "heartbeat":
+                        #The same value is likely to be sent multiple times so there are
+                        #60 data points per minute
+                        self.on_market_value(float(self.last_market_value))
+                    elif msg["type"] == "error":
+                        print(msg["message"])
+                        print("CLOSING WEBSOCKET")
+                        self.close()
 
     def close(self):
         if not self.stop:
