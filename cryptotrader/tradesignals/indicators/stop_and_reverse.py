@@ -5,7 +5,7 @@ Indicates when the trend changes direction.
 
 class SAR(object):
     
-    def __init__(self, acceleration_factor=0.2, max_acceleration_factor=2):
+    def __init__(self, acceleration_factor=0.02, max_acceleration_factor=0.2):
         self.af = acceleration_factor
         self.initial_af = acceleration_factor
         self.max_af = max_acceleration_factor
@@ -18,24 +18,37 @@ class SAR(object):
         self._previous_previous_low = float("inf")
         self._previous_high = 0
         self._previous_previous_high = 0
+        self._first_time_calling_set_up = True
         
-    def _set_up(self, initial_sar, initial_high_point, initial_low_point):
+    def _set_up(self, high, low):
         '''
-        initial_sar can be the close of a period
+        high is the high of a period
         
-        initial_high_point can be the high of a period
-        
-        initial_low_point can be the low of a period
+        low is the low of a period
         '''
         
-        self._sar = initial_sar
-        self._hp = initial_high_point
-        self._lp = initial_low_point
+        if( self._first_time_calling_set_up == True ):
+            self._previous_low = low
+            self._previous_high = high
+            self._first_time_calling_set_up = False
+        else:
+            self._lp = min(self._previous_low, low)
+            self._hp = max(self._previous_high, high)
+        
+            #https://quant.stackexchange.com/questions/35570/how-do-you-calculate-the-initial-prior-sar-value-in-a-parabolic-sar-over-fx-mark
+            if( self._previous_high < high ):
+                #Initial PSAR value is the low point when it is in an upward trend
+                self._sar = self._lp
+                self._bull = True
+            else:
+                #Initial PSAR value is the high point when it is in a downward trend
+                self._sar = self._hp
+                self._bull = False
      
     def is_set_up(self):
         return self._sar != None
      
-    def adjust(self, high, low, close):
+    def adjust(self, high, low):
         '''
         Returns: True if the trend is going up (bull market).
                 False if the trend is going down (bear market).
@@ -43,13 +56,13 @@ class SAR(object):
         '''
         
         if self.is_set_up() == False:
-            self._set_up(close, high, low)
+            self._set_up(high, low)
             return None
         
         if self._bull:
             self._sar = self._sar + self.af * (self._hp - self._sar)
         else:
-            self._sar = self._sar + self.af * (self._sar - self._lp)
+            self._sar = self._sar + self.af * (self._lp - self._sar)
             
         reverse = False
         if self._bull:
@@ -89,7 +102,7 @@ class SAR(object):
         self._previous_low = low
         self._previous_previous_high = self._previous_high
         self._previous_high = high
-        
+
         #Return whether or not the trend was reversed and in what direction
         if reverse:
             return self._bull
