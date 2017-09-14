@@ -6,13 +6,10 @@ class EMA(object):
 
     def __init__(self, initial_ema, moving_average_length):
         '''
-        initial_ema is the exponential moving average the instant the MovingAverage was created.
+        initial_ema is the exponential moving average the instant the Moving Average was created.
         
         moving_average_length is how many data points should be taken into consideration
         when calculating the MA.
-        
-        data_points_per_minute is how many times add_data_point() is expected to
-        be called in a minute.
         '''
         
         print("Created EMA assistant.")
