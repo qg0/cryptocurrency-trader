@@ -1,0 +1,2 @@
+from bitfinex_pipeline import BitfinexPipeline
+from bitfinex_trader import BitfinexTrader
