@@ -70,12 +70,6 @@ class GDAXPipeline(object):
         self.seconds_to_reset = minutes_to_reset * 60 #Time in seconds
         self._time_started = 0
         
-        #GET Request the API to get the current value
-        #Value is only set when it changes so multiple seconds could pass without
-        #calling on_market_value if this is not done
-        ticker = urllib2.urlopen("https://api.gdax.com/products/"+product+"/ticker").read()
-        self.last_market_value = json.loads(ticker)["price"]
-        
         self.stop = False
         self.ws = None
         self.thread = None
@@ -96,7 +90,6 @@ class GDAXPipeline(object):
         
         if not isinstance(self.product, list):
             self.product = [self.product]
-
         sub_params = {'type': 'subscribe', 'product_ids': self.product}
 
         self.ws = create_connection(self.url)
@@ -122,13 +115,14 @@ class GDAXPipeline(object):
                     print(e)
                 else:
                     
-                    if msg["type"] == "match":
-                        #A buy order was matched with a sell order so the price changed
-                        self.last_market_value = msg["price"]
-                    elif msg["type"] == "heartbeat":
+                    if msg["type"] == "heartbeat":
+                        #Get the ticker price
+                        ticker = urllib2.urlopen("https://api.gdax.com/products/"+self.product[0]+"/ticker").read()
+                        market_value = json.loads(ticker)["price"]
+                        
                         #The same value is likely to be sent multiple times so there are
                         #60 data points per minute
-                        self.on_market_value(float(self.last_market_value))
+                        self.on_market_value(float(market_value))
                     elif msg["type"] == "error":
                         print(msg["message"])
                         print("CLOSING WEBSOCKET")
