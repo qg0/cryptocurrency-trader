@@ -23,26 +23,30 @@ class ATR(object):
         self.periods_per_atr = periods_per_atr
         self.initial_true_ranges = []
         self._atr = None
+        self._previous_close = None
         
     def is_set_up(self):
         return self._atr != None
         
     def adjust(self, high, low, close):
-        if not self.is_set_up():
-            #Initial ATR is the average of the past true ranges
-            self.initial_true_ranges.append(true_range(high, low, close))
+        if self._previous_close != None:
+            if not self.is_set_up():
+                #Initial ATR is the average of the past true ranges
+                self.initial_true_ranges.append(true_range(high, low, self._previous_close))
+                
+                if len(self.initial_true_ranges) >= self.periods_per_atr:
+                    my_sum = 0
+                    for tr in self.initial_true_ranges:
+                        my_sum += tr
+                    self._atr = my_sum / self.periods_per_atr
+            else:
+                #Incorporate the current true range into the ATR
+                tr = true_range(high, low, self._previous_close)
+                
+                #Include the previous ATR to smooth the data
+                self._atr = (self._atr * (self.periods_per_atr-1) + tr) / self.periods_per_atr
             
-            if len(self.initial_true_ranges) >= self.periods_per_atr:
-                my_sum = 0
-                for tr in self.initial_true_ranges:
-                    my_sum += tr
-                self._atr = my_sum / self.periods_per_atr
-        else:
-            #Incorporate the current true range into the ATR
-            tr = true_range(high, low, close)
-            
-            #Include the previous ATR to smooth the data
-            self._atr = (self._atr * (self.periods_per_atr-1) + tr) / self.periods_per_atr
+        self._previous_close = close
         
     def get(self):
         if not self.is_set_up():
