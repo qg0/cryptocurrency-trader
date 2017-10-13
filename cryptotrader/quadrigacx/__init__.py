@@ -1,0 +1,1 @@
+from cryptotrader.quadrigacx.quadriga_pipeline import QuadrigaPipeline
