@@ -8,9 +8,10 @@ import json
 import time
 from threading import Thread
 import urllib2
+from quadriga_options import QuadrigaTickers
 
 class QuadrigaPipeline(object):
-    def __init__(self, on_order_book, product, poll_time=15):
+    def __init__(self, on_order_book, product=QuadrigaTickers.BTC_CAD, poll_time=15):
         '''
         on_order_book should have 2 parameters: one for the bids and one for the asks.
         on_order_book will be called every [poll_time] seconds
@@ -69,7 +70,7 @@ class QuadrigaPipeline(object):
         data = json.loads(urllib2.urlopen(req).read())
         return data
 
-    def close(self):
+    def stop(self):
         if not self.stop:
             self.stop = True
 
@@ -80,5 +81,5 @@ if __name__ == "__main__":
         print("Highest bid: "+bids[0][0]+"CAD for "+bids[0][1]+"ETH.")
         print("Lowest ask: "+asks[0][0]+"CAD for "+asks[0][1]+"ETH.")
         
-    pipeline = QuadrigaPipeline(on_order_book, "eth_cad", 15)
+    pipeline = QuadrigaPipeline(on_order_book, QuadrigaTickers.ETH_CAD, 15)
     pipeline.start()
