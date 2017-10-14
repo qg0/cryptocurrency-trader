@@ -45,4 +45,5 @@ class Trader(object):
     @abstractmethod
     def fetch_assets(self):
         print("fetch_assets is expected to be overriden by a child of Trader")
-        raise NotImplementedError
+        raise NotImplementedError    def hold(self, market_value):
+        print("Need to override function 'hold' before using it")

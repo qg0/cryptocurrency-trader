@@ -25,6 +25,7 @@ class SpreadSizeStrategy(Strategy):
         self._spread_size_indicator = SpreadSize(minimum_return, market_fee)
         self.default_position = default_position
         self.current_position = default_position
+        self._first_time_unprofitable = True #Prevents repeating the same message.
         
         # undercut_market_by is used to make the strategy's order be the next one filled on the market.
         with localcontext() as context:
@@ -36,7 +37,6 @@ class SpreadSizeStrategy(Strategy):
         Pre: Traders keep track of their balance / assets and do not attempt a trade when they do not
              have the balance to buy with or the assets to sell.
         '''
-        
         
         # Financial calculations need accurate decimals
         with localcontext() as context:
@@ -60,4 +60,19 @@ class SpreadSizeStrategy(Strategy):
                 else:
                     self.notify_observers(True, highest_bid)
                     self.current_position = True
+                self._first_time_unprofitable = True
+                    
+            else:
+                
+                # Not profitable = hold default position.
+                if self.default_position == True:
+                    if self._first_time_unprofitable:
+                        print("Spread is not profitable. Holding major currency. May have to buy at a loss.")
+                    self.notify_observers(None, lowest_ask)
+                else:
+                    if self._first_time_unprofitable:
+                        print("Spread is not profitable. Holding minor currency. May have to sell at a loss.")
+                    self.notify_observers(None, highest_bid)
+                self.current_position = self.default_position
+                self._first_time_unprofitable = False
             
