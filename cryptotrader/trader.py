@@ -15,11 +15,9 @@ class Trader(object):
         self.balance = None
         self.assets = None
         self.can_buy = True
+        self.can_sell = True
         self.is_test = is_test
         self.minimum_trade = minimum_trade
-        
-        #Threshold above which a valuation is not considered valid.
-        self.outlier_threshold = 5000
     
     @abstractmethod
     def buy(self, market_value):
@@ -37,13 +35,10 @@ class Trader(object):
         
         print("sell is expected to be overriden by a child of Trader")
         
-    @abstractmethod
-    def fetch_balance(self):
-        print("fetch_balance is expected to be overriden by a child of Trader")
-        raise NotImplementedError
-    
-    @abstractmethod
-    def fetch_assets(self):
-        print("fetch_assets is expected to be overriden by a child of Trader")
-        raise NotImplementedError    def hold(self, market_value):
+    def hold(self, market_value):
         print("Need to override function 'hold' before using it")
+        
+    def abort(self):
+        ''' Post: Trader will not buy or sell. '''
+        self.can_buy = False
+        self.can_sell = False
