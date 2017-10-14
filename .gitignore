@@ -5,3 +5,4 @@
 *.pyc
 coinbaseUSD.csv
 realtime-data.txt
+quadriga_ignore.py
