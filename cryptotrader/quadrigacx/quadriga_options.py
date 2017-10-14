@@ -15,6 +15,10 @@ class QuadrigaOptions(object):
     _undercut_by = {"eth_cad": 0.01, "btc_cad": 0.01, "ltc_cad": 0.01,
                  "btc_usd": 0.01, "eth_btc": 0.0000005}
     
+    # Number of decimal places in prices.
+    _amount_precision = {"eth_cad": 8, "btc_cad": 8, "ltc_cad": 8, "btc_usd": 8, "eth_btc": 8}
+    _price_precision = {"eth_cad": 2, "btc_cad": 2, "ltc_cad": 2, "btc_usd": 2, "eth_btc": 8}
+    
     def __init__(self, ticker):
         '''
         Pre: ticker must be from QuadrigaTickers
@@ -28,6 +32,8 @@ class QuadrigaOptions(object):
         self.minor_currency = QuadrigaOptions._pairs[ticker][1]
         self.minimum_trade = QuadrigaOptions._minimum_trades[ticker]
         self.undercut = QuadrigaOptions._undercut_by[ticker]
+        self.amount_precision = QuadrigaOptions._amount_precision[ticker]
+        self.price_precision = QuadrigaOptions._price_precision[ticker]
         
 class QuadrigaTickers:
     # Prevents magic strings and makes it easy to tell what markets are available.

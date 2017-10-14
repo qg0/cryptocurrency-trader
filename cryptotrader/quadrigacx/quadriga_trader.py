@@ -53,6 +53,8 @@ class QuadrigaTrader(Trader):
         self.major_currency = options.major_currency
         self.minor_currency = options.minor_currency
         self.percentage_to_trade = Decimal(percentage_to_trade)
+        self.amount_precision = options.amount_precision
+        self.price_precision = options.price_precision
         
         with localcontext() as context:
             context.prec = 8
@@ -85,6 +87,7 @@ class QuadrigaTrader(Trader):
 
             self.balance = Decimal(r.json()[self.minor_currency+"_balance"]) * self.percentage_to_trade
             self.assets = Decimal(r.json()[self.major_currency+"_balance"]) * self.percentage_to_trade
+            print("Trading with: "+str(round(self.balance, 3))+self.minor_currency+" and "+str(round(self.assets,3))+self.major_currency)
         
     def buy(self, market_value):
         if self.can_buy == True:
@@ -111,8 +114,8 @@ class QuadrigaTrader(Trader):
     def limit_buy_order(self, market_value):  
         payload = self.create_authenticated_payload()
         payload["book"] = self.product
-        payload["amount"] = self.balance / market_value
-        payload["price"] = market_value
+        payload["amount"] = round(self.balance / market_value, self.amount_precision)
+        payload["price"] = round(market_value, self.price_precision)
         r = requests.post('https://api.quadrigacx.com/v2/buy', data=payload)
         self._waiting_for_order_to_fill = r.json()["id"]
                 
@@ -152,9 +155,9 @@ class QuadrigaTrader(Trader):
     def limit_sell_order(self, market_value):
         payload = self.create_authenticated_payload()
         payload["book"] = self.product
-        payload["amount"] = self.assets
-        payload["price"] = market_value
-        r = requests.post('https://api.quadrigacx.com/v2/buy', data=payload)
+        payload["amount"] = round(self.assets, self.amount_precision)
+        payload["price"] = round(market_value, self.price_precision)
+        r = requests.post('https://api.quadrigacx.com/v2/sell', data=payload)
         self._waiting_for_order_to_fill = r.json()["id"]
                 
     def simulation_sell(self, market_value):
@@ -221,16 +224,15 @@ class QuadrigaTrader(Trader):
             #       to pass data to the market observer.
             
             payload = self.create_authenticated_payload()
-            payload[id] = order_id
+            payload["id"] = order_id
             r = requests.post('https://api.quadrigacx.com/v2/lookup_order', data=payload)
-            json_result = r.json()
-            
+            json_result = r.json()[0]
             
             # Status codes: -1 cancelled, 0 active, 1 = partially filled, 2 = filled
             status_code = json_result["status"]
             if status_code == 2:
                 # Type 0 == Buy, Type 1 == Sell
-                if json_result["type"] == 0:
+                if json_result[0]["type"] == 0:
                     self.assets = (json_result["price"] * json_result["amount"]) * self.post_fee
                     self._active_buy_order = False
                 else:
