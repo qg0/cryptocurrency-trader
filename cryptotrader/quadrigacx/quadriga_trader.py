@@ -13,8 +13,8 @@ from cryptotrader.trader import Trader
 
 class QuadrigaTrader(Trader):
         
-    simulation_buy_order_id = 1234
-    simulation_sell_order_id = 4321
+    simulation_buy_order_id = "1234"
+    simulation_sell_order_id = "4321"
         
     def __init__(self, options, default_position=False, percentage_to_trade=1, fee=0.005, starting_test_balance=100):
         '''
@@ -209,12 +209,14 @@ class QuadrigaTrader(Trader):
                             if self._filled_simulation_assets >= self._expecting_simulation_assets:
                                 self.assets = self._expecting_simulation_assets * self.post_fee
                                 self._active_buy_order = False
+                                self._waiting_for_order_to_fill = None
                         elif order_id == QuadrigaTrader.simulation_sell_order_id and trade["side"] == "buy":
                             incoming_balance = Decimal(trade["amount"]) * self._limit_order_price
                             self._filled_simulation_balance += incoming_balance
                             if self._filled_simulation_balance >= self._expecting_simulation_balance:
                                 self.balance = self._expecting_simulation_balance * self.post_fee
                                 self._active_sell_order = False
+                                self._waiting_for_order_to_fill = None
             
         else:
             
@@ -230,17 +232,19 @@ class QuadrigaTrader(Trader):
             
             # Status codes: -1 cancelled, 0 active, 1 = partially filled, 2 = filled
             status_code = json_result["status"]
-            if status_code == 2:
+            if status_code == "2":
                 # Type 0 == Buy, Type 1 == Sell
-                if json_result[0]["type"] == 0:
+                if json_result[0]["type"] == "0":
                     self.assets = (json_result["price"] * json_result["amount"]) * self.post_fee
                     self._active_buy_order = False
+                    self._waiting_for_order_to_fill = None
                 else:
                     self.balance = (json_result["price"] * json_result["amount"]) * self.post_fee
                     self._active_sell_order = False
-            elif status_code == 1:
+                    self._waiting_for_order_to_fill = None
+            elif status_code == "1":
                 print("The order has been partially filled. Waiting until it is fully filled.")
-            elif status_code == -1:
+            elif status_code == "-1":
                 print("The order was cancelled, likely because a human intervened.")
                 self._waiting_for_order_to_fill = None
                 self.abort()
@@ -264,7 +268,7 @@ class QuadrigaTrader(Trader):
             if self._active_sell_order:
                 # Cancel sell order
                 if self.is_test:
-                    self._waiting_for_order_to_fill = 0
+                    self._waiting_for_order_to_fill = None
                 else:
                     self.cancel_order(self._waiting_for_order_to_fill)
                 self._active_sell_order = False
@@ -282,7 +286,7 @@ class QuadrigaTrader(Trader):
             if self._active_buy_order:
                 # Cancel sell order
                 if self.is_test:
-                    self._waiting_for_order_to_fill = 0
+                    self._waiting_for_order_to_fill = None
                 else:
                     self.cancel_order(self._waiting_for_order_to_fill)
                 self._active_buy_order = False
