@@ -24,7 +24,7 @@ class QuadrigaPipeline(object):
              poll_time is a positive integer
         '''
         
-        print("Created QuadrigaCX pipeline. Uses QuadrigaCX's websocket API.")
+        print("Created QuadrigaCX pipeline.")
         
         self.on_order_book = on_order_book
         self.order_book_url = "https://api.quadrigacx.com/v2/order_book?book=" + product

@@ -1,2 +1,3 @@
 from cryptotrader.quadrigacx.quadriga_pipeline import QuadrigaPipeline
+from cryptotrader.quadrigacx.quadriga_trader import QuadrigaTrader
 from cryptotrader.quadrigacx.quadriga_options import QuadrigaOptions, QuadrigaTickers
