@@ -85,8 +85,8 @@ class QuadrigaTrader(Trader):
             payload = self.create_authenticated_payload()
             r = requests.post('https://api.quadrigacx.com/v2/balance', data=payload)
 
-            self.balance = Decimal(r.json()[self.minor_currency+"_balance"]) * self.percentage_to_trade
-            self.assets = Decimal(r.json()[self.major_currency+"_balance"]) * self.percentage_to_trade
+            self.balance = Decimal(r.json()[self.minor_currency+"_available"]) * self.percentage_to_trade
+            self.assets = Decimal(r.json()[self.major_currency+"_available"]) * self.percentage_to_trade
             print("Trading with: "+str(round(self.balance, 3))+self.minor_currency+" and "+str(round(self.assets,3))+self.major_currency)
         
     def buy(self, market_value):
