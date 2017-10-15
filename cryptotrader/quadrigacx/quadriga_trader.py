@@ -234,7 +234,7 @@ class QuadrigaTrader(Trader):
             status_code = json_result["status"]
             if status_code == "2":
                 # Type 0 == Buy, Type 1 == Sell
-                if json_result[0]["type"] == "0":
+                if json_result["type"] == "0":
                     self.assets = (json_result["price"] * json_result["amount"]) * self.post_fee
                     self._active_buy_order = False
                     self._waiting_for_order_to_fill = None
