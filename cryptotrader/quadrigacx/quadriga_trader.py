@@ -266,11 +266,9 @@ class QuadrigaTrader(Trader):
         if self.default_position:
                 
             if self._active_sell_order:
-                # Cancel sell order
-                if self.is_test:
-                    self._waiting_for_order_to_fill = None
-                else:
+                if not self.is_test:
                     self.cancel_order(self._waiting_for_order_to_fill)
+                self._waiting_for_order_to_fill = None
                 self._active_sell_order = False
             
             # Buy with any remaining balance
@@ -285,10 +283,9 @@ class QuadrigaTrader(Trader):
         else:
             if self._active_buy_order:
                 # Cancel sell order
-                if self.is_test:
-                    self._waiting_for_order_to_fill = None
-                else:
+                if not self.is_test:
                     self.cancel_order(self._waiting_for_order_to_fill)
+                self._waiting_for_order_to_fill = None
                 self._active_buy_order = False
             
             # Sell any remaining assets
