@@ -9,14 +9,14 @@ import time
 import requests
 import sys
 from decimal import Decimal, localcontext
-from cryptotrader.trader import Trader
+from cryptotrader import Trader, DefaultPosition
 
 class QuadrigaTrader(Trader):
         
     simulation_buy_order_id = "1234"
     simulation_sell_order_id = "4321"
         
-    def __init__(self, options, default_position=False, percentage_to_trade=1, fee=0.005, starting_test_balance=100):
+    def __init__(self, options, percentage_to_trade=1, fee=0.005, starting_test_balance=100):
         '''
         default_position is whether the Trader should hold the minor currency (sell, False) or
         the major currency (buy / True) after scalping the market. For example, in a USD-CAD market
@@ -48,7 +48,6 @@ class QuadrigaTrader(Trader):
         self._active_buy_order = False
         self._active_sell_order = False
         
-        self.default_position = default_position
         self.product = options.ticker
         self.major_currency = options.major_currency
         self.minor_currency = options.minor_currency
@@ -69,6 +68,14 @@ class QuadrigaTrader(Trader):
         self.api_secret = api_secret
         self.client = client
         self.fetch_balance_and_assets()
+        
+    def should_default_to(self, default_position):
+        '''
+        True == hold/buy major currency when the market is unprofitable
+        False == hold/sell to get minor currency when market is unprofitable 
+        None == hold whatever the trader has
+        '''
+        self.default_position = default_position
         
     def fetch_balance_and_assets(self):
         '''
@@ -274,15 +281,24 @@ class QuadrigaTrader(Trader):
         requests.post('https://api.quadrigacx.com/v2/cancel_order', data=payload)
     
     def hold(self, market_value):
-        ''' Revert to default position. '''
-        if self.default_position:
+        ''' Cancel any open orders and (optionally) revert back to the default position. '''
+        
+        if self._active_sell_order:
+            if not self.is_test:
+                self.cancel_order(self._waiting_for_order_to_fill)
+            self._waiting_for_order_to_fill = None
+            self._active_sell_order = False
+        
+        if self._active_buy_order:
+            # Cancel sell order
+            if not self.is_test:
+                self.cancel_order(self._waiting_for_order_to_fill)
+            self._waiting_for_order_to_fill = None
+            self._active_buy_order = False
+        
+        
+        if self.default_position == DefaultPosition.BUY:
                 
-            if self._active_sell_order:
-                if not self.is_test:
-                    self.cancel_order(self._waiting_for_order_to_fill)
-                self._waiting_for_order_to_fill = None
-                self._active_sell_order = False
-            
             # Buy with any remaining balance
             if self.is_test:
                 if self._filled_simulation_balance > 0:
@@ -292,13 +308,7 @@ class QuadrigaTrader(Trader):
                 self.limit_buy_order(market_value)
                 self._active_buy_order = True
 
-        else:
-            if self._active_buy_order:
-                # Cancel sell order
-                if not self.is_test:
-                    self.cancel_order(self._waiting_for_order_to_fill)
-                self._waiting_for_order_to_fill = None
-                self._active_buy_order = False
+        elif self.default_position == DefaultPosition.SELL:
             
             # Sell any remaining assets
             if self.is_test:

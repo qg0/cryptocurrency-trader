@@ -7,6 +7,7 @@ from decimal import Decimal, localcontext
 
 from cryptotrader.tradesignals.strategies import Strategy
 from cryptotrader.tradesignals.indicators import SpreadSize
+from cryptotrader import DefaultPosition
 
 class SpreadSizeStrategy(Strategy):
     
@@ -65,14 +66,19 @@ class SpreadSizeStrategy(Strategy):
             else:
                 
                 # Not profitable = hold default position.
-                if self.default_position == True:
+                if self.default_position == DefaultPosition.HOLD:
                     if self._first_time_unprofitable:
-                        print("Spread is not profitable. Holding major currency. May have to buy at a loss.")
-                    self.notify_observers(None, lowest_ask)
+                        print("Spread is not profitable. Holding.")
+                    self.notify_observers(None, -1) # market_value is irrelevant so it will be set to -1
                 else:
-                    if self._first_time_unprofitable:
-                        print("Spread is not profitable. Holding minor currency. May have to sell at a loss.")
-                    self.notify_observers(None, highest_bid)
-                self.current_position = self.default_position
+                    if self.default_position == DefaultPosition.BUY:
+                        if self._first_time_unprofitable:
+                            print("Spread is not profitable. Holding major currency. May have to buy at a loss.")
+                        self.notify_observers(None, lowest_ask)
+                    elif self.default_position == DefaultPosition.SELL:
+                        if self._first_time_unprofitable:
+                            print("Spread is not profitable. Holding minor currency. May have to sell at a loss.")
+                        self.notify_observers(None, highest_bid)
+                    self.current_position = self.default_position
                 self._first_time_unprofitable = False
             
