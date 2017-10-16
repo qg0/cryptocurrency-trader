@@ -95,21 +95,27 @@ class QuadrigaTrader(Trader):
             if self._waiting_for_order_to_fill != None:
                 self.was_order_filled(self._waiting_for_order_to_fill)
                 
-            #Always spend all the balance. A percentage of it was allocated to the trader at the start.
-            assets_to_buy = self.balance / market_value
-            if assets_to_buy >= self.minimum_trade:
-                
-                self._active_buy_order = True
-                
-                if self.is_test:
-                    self.simulation_buy(assets_to_buy)
+            # Prevent selling while a buy order is active.
+            if self._waiting_for_order_to_fill == None:    
+            
+                #Always spend all the balance. A percentage of it was allocated to the trader at the start.
+                assets_to_buy = self.balance / market_value
+                if assets_to_buy >= self.minimum_trade:
+                    
+                    self._active_buy_order = True
+                    
+                    if self.is_test:
+                        self.simulation_buy(assets_to_buy)
+                    else:
+                        self.limit_buy_order(market_value)
+                    
+                    print("Buying. Planning to spend: "+str(self.balance)+self.minor_currency)
+                    self.balance = 0
                 else:
-                    self.limit_buy_order(market_value)
-                
-                print("Buying. Planning to spend: "+str(self.balance)+self.minor_currency)
-                self.balance = 0
+                    sys.stdout.write('b ')
+                    
             else:
-                sys.stdout.write('b ')
+                sys.stdout.write('wb ')
               
     def limit_buy_order(self, market_value):  
         payload = self.create_authenticated_payload()
@@ -137,20 +143,26 @@ class QuadrigaTrader(Trader):
             
         if self.can_sell:
             
-            #Always sell all assets. A percentage of them was allocated to the trader at the start.
-            if self.assets >= self.minimum_trade:
-                
-                self._active_sell_order = True
-                
-                if self.is_test:
-                    self.simulation_sell(market_value)
+            # Prevent selling while a buy order is active.
+            if self._waiting_for_order_to_fill == None:
+            
+                #Always sell all assets. A percentage of them was allocated to the trader at the start.
+                if self.assets >= self.minimum_trade:
+                    
+                    self._active_sell_order = True
+                    
+                    if self.is_test:
+                        self.simulation_sell(market_value)
+                    else:
+                        self.limit_sell_order(market_value)
+                    
+                    print("Selling. Planning to get balance: "+str(self.assets * market_value * self.post_fee)+self.minor_currency)
+                    self.assets = 0
                 else:
-                    self.limit_sell_order(market_value)
-                
-                print("Selling. Planning to get balance: "+str(self.assets * market_value * self.post_fee)+self.minor_currency)
-                self.assets = 0
+                    sys.stdout.write('s ')
+                    
             else:
-                sys.stdout.write('s ')
+                sys.stdout.write('ws ')
                 
     def limit_sell_order(self, market_value):
         payload = self.create_authenticated_payload()
