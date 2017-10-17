@@ -16,7 +16,7 @@ class QuadrigaTrader(Trader):
     simulation_buy_order_id = "1234"
     simulation_sell_order_id = "4321"
         
-    def __init__(self, options, percentage_to_trade=1, fee=0.005, starting_test_balance=100):
+    def __init__(self, options, percentage_to_trade=1, starting_test_balance=100):
         '''
         default_position is whether the Trader should hold the minor currency (sell, False) or
         the major currency (buy / True) after scalping the market. For example, in a USD-CAD market
@@ -60,7 +60,7 @@ class QuadrigaTrader(Trader):
             
             self.balance = Decimal(starting_test_balance)
             self.assets = Decimal(0)
-            self.post_fee = Decimal(1 - fee)
+            self.post_fee = Decimal(1) - Decimal(options.fee)
             
     def authenticate(self, api_key, api_secret, client):
         self.is_test = False

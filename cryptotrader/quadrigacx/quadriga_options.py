@@ -15,6 +15,10 @@ class QuadrigaOptions(object):
     _undercut_by = {"eth_cad": 0.01, "btc_cad": 0.01, "ltc_cad": 0.01,
                  "btc_usd": 0.01, "eth_btc": 0.0000005}
     
+    # Fee is a percentage.
+    _fees = {"eth_cad": 0.005, "btc_cad": 0.005, "ltc_cad": 0.005,
+                 "btc_usd": 0.005, "eth_btc": 0.002}
+    
     # Number of decimal places in prices.
     _amount_precision = {"eth_cad": 8, "btc_cad": 8, "ltc_cad": 8, "btc_usd": 8, "eth_btc": 8}
     _price_precision = {"eth_cad": 2, "btc_cad": 2, "ltc_cad": 2, "btc_usd": 2, "eth_btc": 8}
@@ -34,6 +38,7 @@ class QuadrigaOptions(object):
         self.undercut = QuadrigaOptions._undercut_by[ticker]
         self.amount_precision = QuadrigaOptions._amount_precision[ticker]
         self.price_precision = QuadrigaOptions._price_precision[ticker]
+        self.fee = QuadrigaOptions._fees[ticker]
         
 class QuadrigaTickers:
     # Prevents magic strings and makes it easy to tell what markets are available.
