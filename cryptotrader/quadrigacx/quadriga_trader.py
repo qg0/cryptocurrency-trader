@@ -118,7 +118,7 @@ class QuadrigaTrader(Trader):
                         self.limit_buy_order(market_value)
                     
                     print("Buying. Planning to spend: "+str(self.balance)+self.minor_currency)
-                    self.balance = 0
+                    self.balance = Decimal(0)
                 else:
                     sys.stdout.write('b ')
                     
@@ -128,7 +128,7 @@ class QuadrigaTrader(Trader):
     def limit_buy_order(self, market_value):  
         payload = self.create_authenticated_payload()
         payload["book"] = self.product
-        payload["amount"] = round(self.balance / market_value, self.amount_precision)
+        payload["amount"] = round(float(self.balance / market_value), self.amount_precision)
         payload["price"] = round(market_value, self.price_precision)
         r = requests.post('https://api.quadrigacx.com/v2/buy', data=payload)
         self._waiting_for_order_to_fill = r.json()["id"]
@@ -165,7 +165,7 @@ class QuadrigaTrader(Trader):
                         self.limit_sell_order(market_value)
                     
                     print("Selling. Planning to get balance: "+str(self.assets * market_value * self.post_fee)+self.minor_currency)
-                    self.assets = 0
+                    self.assets = Decimal(0)
                 else:
                     sys.stdout.write('s ')
                     
@@ -175,7 +175,7 @@ class QuadrigaTrader(Trader):
     def limit_sell_order(self, market_value):
         payload = self.create_authenticated_payload()
         payload["book"] = self.product
-        payload["amount"] = round(self.assets, self.amount_precision)
+        payload["amount"] = round(float(self.assets), self.amount_precision)
         payload["price"] = round(market_value, self.price_precision)
         r = requests.post('https://api.quadrigacx.com/v2/sell', data=payload)
         self._waiting_for_order_to_fill = r.json()["id"]
