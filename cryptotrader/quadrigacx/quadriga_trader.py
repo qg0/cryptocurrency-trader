@@ -318,13 +318,14 @@ class QuadrigaTrader(Trader):
         order_info = self.lookup_order(order_id)
         # Type 0 == Buy, Type 1 == Sell
         if order_info["type"] == 0:
-            self.balance = order_info["price"] * order_info["amount"]
+            self.balance = Decimal(order_info["price"]) * Decimal(order_info["amount"])
         else:
-            self.assets = order_info["amount"]
+            self.assets = Decimal(order_info["amount"])
         requests.post('https://api.quadrigacx.com/v2/cancel_order', data=payload)
     
     def abort(self):
         Trader.abort(self)
+        self._waiting_for_order_to_fill = None
         print("QuadrigaTrader is shutting down.")
         
     def lookup_order(self, order_id):
