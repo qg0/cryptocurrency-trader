@@ -16,6 +16,9 @@ class SpreadSize(object):
         self.minimum_return = Decimal(minimum_return)
         self.keep_after_fee_squared = Decimal((1 - market_fee) * (1 - market_fee))
         
+    def threshold(self, highest_bid):
+        return self.minimum_return * highest_bid / self.keep_after_fee_squared - highest_bid
+        
     def is_profitable(self, highest_bid, lowest_ask):
         '''
         Returns: True if the spread is profitable, False if it is not.
@@ -23,8 +26,11 @@ class SpreadSize(object):
         
         with localcontext() as context:
             context.prec = 8
-        
-            spread = Decimal(lowest_ask - highest_bid)
             
-            return spread > self.minimum_return * highest_bid / self.keep_after_fee_squared - highest_bid
+            lowest_ask = Decimal(lowest_ask)
+            highest_bid = Decimal(highest_bid)
+        
+            spread = lowest_ask - highest_bid
+
+            return spread > self.threshold(highest_bid)
         
