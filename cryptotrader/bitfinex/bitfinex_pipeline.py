@@ -27,8 +27,6 @@ class BitfinexPipeline(object):
              minutes_to_reset is positive
         '''
         
-        print("Created Bitfinex pipeline. Uses Bitfinex's websocket API.")
-        
         self.on_market_value = on_market_value
         self.url = "wss://api.bitfinex.com/ws"
         self.product = product.lower()
@@ -53,6 +51,7 @@ class BitfinexPipeline(object):
 
         self.thread = Thread(target=_go)
         self.thread.start()
+        print("Started Bitfinex pipeline. Uses Bitfinex's websocket API.")
 
     def _connect(self):
         '''

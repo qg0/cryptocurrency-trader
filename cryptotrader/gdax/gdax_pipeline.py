@@ -62,8 +62,6 @@ class GDAXPipeline(object):
              minutes_to_reset is positive
         '''
         
-        print("Created GDAX pipeline. Uses GDAX's websocket API.")
-        
         self.on_market_value = on_market_value
         self.url = "wss://ws-feed.gdax.com"
         self.product = product.lower()
@@ -81,6 +79,7 @@ class GDAXPipeline(object):
 
         self.thread = Thread(target=_go)
         self.thread.start()
+        print("Started GDAX pipeline. Uses GDAX's websocket API.")
 
     def _connect(self):
         '''

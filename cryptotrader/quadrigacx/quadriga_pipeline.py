@@ -24,8 +24,6 @@ class QuadrigaPipeline(object):
              poll_time is a positive integer
         '''
         
-        print("Created QuadrigaCX pipeline.")
-        
         self.on_order_book = on_order_book
         self.order_book_url = "https://api.quadrigacx.com/v2/order_book?book=" + product
         self.poll_time = poll_time
@@ -35,7 +33,6 @@ class QuadrigaPipeline(object):
         self.thread = None
 
     def start(self):
-        
         def _go():
             last_time = 0
             while True:
@@ -50,6 +47,7 @@ class QuadrigaPipeline(object):
         self.thread = Thread(target=_go)
         self.stop = False
         self.thread.start()
+        print("Started QuadrigaCX pipeline.")
 
     def get_order_book(self):
         '''
