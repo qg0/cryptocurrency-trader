@@ -26,11 +26,11 @@ def trade():
         trader.authenticate(QuadrigaSecret.api_key, QuadrigaSecret.api_secret, QuadrigaSecret.client_id)
         if trade_assets:
             trader.balance = 0
+            print("Operator: Set trader's balance to 0.")
         else:
             trader.assets = 0
+            print("Operator: Set trader's assets to 0.")
     trader.should_default_to(default_position)
-   
-        
     
     strategy = SpreadSizeStrategy(default_position, minimum_return=minimum_return, market_fee=options.fee, undercut_market_by=options.undercut)
     strategy.attach_observer(MarketChangeObserver(trader))
@@ -74,6 +74,6 @@ def what_is_profitable():
 
 
 if __name__ == "__main__":
-    what_is_profitable()
-    #trade()
+    #what_is_profitable()
+    trade()
     
