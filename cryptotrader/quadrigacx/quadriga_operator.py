@@ -12,24 +12,18 @@ from decimal import Decimal
 
 # Set the options in one place to make it simple to edit later.
 # These are used in trade()
-options = QuadrigaOptions(QuadrigaTickers.ETH_BTC)
+options = QuadrigaOptions(QuadrigaTickers.BTC_USD)
 is_simulation = False
-trade_assets = False # True == set balance to zero. False == set assets to zero. Only for live trading.
-minimum_return = 1.005
-percentage_to_trade = 0.4
+start_by_buying = False
+minimum_return = 1.009
+percentage_to_trade = 0.35
 default_position = DefaultPosition.HOLD
 
 def trade():
     # Sensitive authentication information is kept in a secret file off GitHub.
-    trader = QuadrigaTrader(options, percentage_to_trade=percentage_to_trade)
+    trader = QuadrigaTrader(options, percentage_to_trade=percentage_to_trade, start_by_buying=start_by_buying)
     if not is_simulation:
         trader.authenticate(QuadrigaSecret.api_key, QuadrigaSecret.api_secret, QuadrigaSecret.client_id)
-        if trade_assets:
-            trader.balance = 0
-            print("Operator: Set trader's balance to 0.")
-        else:
-            trader.assets = 0
-            print("Operator: Set trader's assets to 0.")
     trader.should_default_to(default_position)
     
     strategy = SpreadSizeStrategy(default_position, minimum_return=minimum_return, market_fee=options.fee, undercut_market_by=options.undercut)

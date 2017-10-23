@@ -16,14 +16,8 @@ class QuadrigaTrader(Trader):
     simulation_buy_order_id = "1234"
     simulation_sell_order_id = "4321"
         
-    def __init__(self, options, percentage_to_trade=1, starting_test_balance=100):
+    def __init__(self, options, percentage_to_trade=1, start_by_buying=True, starting_amount=100):
         '''
-        default_position is whether the Trader should hold the minor currency (sell, False) or
-        the major currency (buy / True) after scalping the market. For example, in a USD-CAD market
-        True would mean CAD is held after scalping and False would mean USD is held after scalping.
-        
-        default_position must be False when in test mode.
-        
         Pre: options is an instance of QuadrigaOptions and must have pair and ticker set.
         Post: self.is_test = True until authenticate() is called
         '''
@@ -54,12 +48,17 @@ class QuadrigaTrader(Trader):
         self.percentage_to_trade = Decimal(percentage_to_trade)
         self.amount_precision = options.amount_precision
         self.price_precision = options.price_precision
+        self.start_by_buying = start_by_buying
         
         with localcontext() as context:
             context.prec = 8
             
-            self.balance = Decimal(starting_test_balance)
-            self.assets = Decimal(0)
+            if self.start_by_buying:
+                self.balance = Decimal(starting_amount)
+                self.assets = Decimal(0)
+            else:
+                self.balance = Decimal(0)
+                self.assets = Decimal(starting_amount)
             self.post_fee = Decimal(1) - Decimal(options.fee)
             
     def authenticate(self, api_key, api_secret, client):
@@ -92,8 +91,10 @@ class QuadrigaTrader(Trader):
             payload = self.create_authenticated_payload()
             r = requests.post('https://api.quadrigacx.com/v2/balance', data=payload)
 
-            self.balance = Decimal(r.json()[self.minor_currency+"_available"]) * self.percentage_to_trade
-            self.assets = Decimal(r.json()[self.major_currency+"_available"]) * self.percentage_to_trade
+            if self.start_by_buying:
+                self.balance = Decimal(r.json()[self.minor_currency+"_available"]) * self.percentage_to_trade
+            else:
+                self.assets = Decimal(r.json()[self.major_currency+"_available"]) * self.percentage_to_trade
             print("Trading with: "+str(round(self.balance, 3))+self.minor_currency+" and "+str(round(self.assets,3))+self.major_currency)
         
     def buy(self, market_value):
