@@ -245,10 +245,7 @@ class QuadrigaTrader(Trader):
             # Note: The pipeline never knows the Trader's status so the pipeline will continue
             #       to pass data to the market observer.
             
-            payload = self.create_authenticated_payload()
-            payload["id"] = order_id
-            r = requests.post('https://api.quadrigacx.com/v2/lookup_order', data=payload)
-            json_result = r.json()[0]
+            json_result = self.lookup_order(order_id)
             
             # Status codes: -1 cancelled, 0 active, 1 = partially filled, 2 = filled
             status_code = json_result["status"]
@@ -275,11 +272,6 @@ class QuadrigaTrader(Trader):
         msg = nonce + self.client + self.api_key
         signature = hmac.new(self.api_secret, msg, hashlib.sha256).hexdigest()
         return {'key': self.api_key, 'nonce': nonce, 'signature': signature}
-    
-    def cancel_order(self, order_id):
-        payload = self.create_authenticated_payload()
-        payload["id"] = order_id
-        requests.post('https://api.quadrigacx.com/v2/cancel_order', data=payload)
     
     def hold(self, market_value):
         ''' Cancel any open orders and (optionally) revert back to the default position. '''
@@ -320,7 +312,24 @@ class QuadrigaTrader(Trader):
                 self.limit_sell_order(market_value)
                 self._active_sell_order = True
     
+    def cancel_order(self, order_id):
+        payload = self.create_authenticated_payload()
+        payload["id"] = order_id
+        order_info = self.lookup_order(order_id)
+        # Type 0 == Buy, Type 1 == Sell
+        if order_info["type"] == 0:
+            self.balance = order_info["price"] * order_info["amount"]
+        else:
+            self.assets = order_info["amount"]
+        requests.post('https://api.quadrigacx.com/v2/cancel_order', data=payload)
+    
     def abort(self):
         Trader.abort(self)
         print("QuadrigaTrader is shutting down.")
+        
+    def lookup_order(self, order_id):
+        payload = self.create_authenticated_payload()
+        payload["id"] = order_id
+        r = requests.post('https://api.quadrigacx.com/v2/lookup_order', data=payload)
+        return r.json()[0]
     
