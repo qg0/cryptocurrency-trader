@@ -73,11 +73,11 @@ class SpreadSizeStrategy(Strategy):
                 else:
                     if self.default_position == DefaultPosition.BUY:
                         if self._first_time_unprofitable:
-                            print("Spread is not profitable. Holding major currency. May have to buy at a loss.")
+                            print("Spread is not profitable. Holding major currency.")
                         self.notify_observers(None, lowest_ask)
                     elif self.default_position == DefaultPosition.SELL:
                         if self._first_time_unprofitable:
-                            print("Spread is not profitable. Holding minor currency. May have to sell at a loss.")
+                            print("Spread is not profitable. Holding minor currency.")
                         self.notify_observers(None, highest_bid)
                     self.current_position = self.default_position
                 self._first_time_unprofitable = False

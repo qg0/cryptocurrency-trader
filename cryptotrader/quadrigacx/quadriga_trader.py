@@ -68,13 +68,16 @@ class QuadrigaTrader(Trader):
         self.client = client
         self.fetch_balance_and_assets()
         
-    def should_default_to(self, default_position):
+    def should_default_to(self, default_position, aggressive=False):
         '''
         True == hold/buy major currency when the market is unprofitable
         False == hold/sell to get minor currency when market is unprofitable 
         None == hold whatever the trader has
+        
+        aggressive == True: sell/buy at a loss when told to hold to guarantee the default position is held.
         '''
         self.default_position = default_position
+        self.aggressive = False
         
     def fetch_balance_and_assets(self):
         '''
@@ -274,43 +277,64 @@ class QuadrigaTrader(Trader):
         return {'key': self.api_key, 'nonce': nonce, 'signature': signature}
     
     def hold(self, market_value):
-        ''' Cancel any open orders and (optionally) revert back to the default position. '''
+        ''' Cancel any open orders and revert back to the default position depending on aggressiveness. '''
         
-        if self._active_sell_order:
-            if not self.is_test:
-                self.cancel_order(self._waiting_for_order_to_fill)
-            self._waiting_for_order_to_fill = None
-            self._active_sell_order = False
+        if self._waiting_for_order_to_fill != None:
+            self.was_order_filled(self._waiting_for_order_to_fill)
         
-        if self._active_buy_order:
-            # Cancel sell order
-            if not self.is_test:
-                self.cancel_order(self._waiting_for_order_to_fill)
-            self._waiting_for_order_to_fill = None
-            self._active_buy_order = False
+        # Might cause a loss.
+        if self.aggressive:
         
-        
-        if self.default_position == DefaultPosition.BUY:
-                
-            # Buy with any remaining balance
-            if self.is_test:
-                if self._filled_simulation_balance > 0:
-                    self.simulation_buy(self._filled_simulation_balance / market_value)
-                    self._active_buy_order = True
-            elif self.balance > 0:
-                self.limit_buy_order(market_value)
-                self._active_buy_order = True
-
-        elif self.default_position == DefaultPosition.SELL:
+            if self.default_position == DefaultPosition.BUY:
+                # Cancel sell order
+                if self._active_sell_order:
+                    if not self.is_test:
+                        self.cancel_order(self._waiting_for_order_to_fill)
+                    self._waiting_for_order_to_fill = None
+                    self._active_sell_order = False
             
-            # Sell any remaining assets
-            if self.is_test:
-                if self._filled_simulation_assets > 0:
-                    self.simulation_sell(market_value)
+                # Buy with any remaining balance
+                if self.is_test:
+                    if self._filled_simulation_balance > 0:
+                        self.simulation_buy(self._filled_simulation_balance / market_value)
+                        self._active_buy_order = True
+                        print("Buying at a loss.")
+                elif self.balance > 0:
+                    self.limit_buy_order(market_value)
+                    self._active_buy_order = True
+                    print("Buying at a loss.")
+    
+            elif self.default_position == DefaultPosition.SELL:
+                # Cancel buy order
+                if self._active_buy_order:
+                    if not self.is_test:
+                        self.cancel_order(self._waiting_for_order_to_fill)
+                    self._waiting_for_order_to_fill = None
+                    self._active_buy_order = False
+                
+                # Sell any remaining assets
+                if self.is_test:
+                    if self._filled_simulation_assets > 0:
+                        self.simulation_sell(market_value)
+                        self._active_sell_order = True
+                        print("Selling at a loss.")
+                elif self.assets > 0:
+                    self.limit_sell_order(market_value)
                     self._active_sell_order = True
-            elif self.assets > 0:
-                self.limit_sell_order(market_value)
-                self._active_sell_order = True
+                    print("Selling at a loss.")
+        else:
+            # Keep orders open if they help reach the default position.
+            if self._active_sell_order and self.default_position != DefaultPosition.SELL:
+                if not self.is_test:
+                    self.cancel_order(self._waiting_for_order_to_fill)
+                self._waiting_for_order_to_fill = None
+                self._active_sell_order = False
+        
+            if self._active_buy_order and self.default_position != DefaultPosition.BUY:
+                if not self.is_test:
+                    self.cancel_order(self._waiting_for_order_to_fill)
+                self._waiting_for_order_to_fill = None
+                self._active_buy_order = False
     
     def cancel_order(self, order_id):
         payload = self.create_authenticated_payload()

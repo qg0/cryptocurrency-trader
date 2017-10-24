@@ -15,16 +15,17 @@ from decimal import Decimal
 options = QuadrigaOptions(QuadrigaTickers.BTC_USD)
 is_simulation = False
 start_by_buying = False
+aggressive = False
 minimum_return = 1.009
-percentage_to_trade = 0.35
-default_position = DefaultPosition.HOLD
+percentage_to_trade = 0.7
+default_position = DefaultPosition.BUY
 
 def trade():
     # Sensitive authentication information is kept in a secret file off GitHub.
     trader = QuadrigaTrader(options, percentage_to_trade=percentage_to_trade, start_by_buying=start_by_buying)
     if not is_simulation:
         trader.authenticate(QuadrigaSecret.api_key, QuadrigaSecret.api_secret, QuadrigaSecret.client_id)
-    trader.should_default_to(default_position)
+    trader.should_default_to(default_position, aggressive=aggressive)
     
     strategy = SpreadSizeStrategy(default_position, minimum_return=minimum_return, market_fee=options.fee, undercut_market_by=options.undercut)
     strategy.attach_observer(MarketChangeObserver(trader))
