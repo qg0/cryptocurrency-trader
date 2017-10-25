@@ -135,6 +135,7 @@ class QuadrigaTrader(Trader):
         payload["price"] = round(market_value, self.price_precision)
         r = requests.post('https://api.quadrigacx.com/v2/buy', data=payload)
         self._waiting_for_order_to_fill = r.json()["id"]
+        self._active_buy_order = True
                 
     def simulation_buy(self, assets_to_buy):
         self._waiting_for_order_to_fill = QuadrigaTrader.simulation_buy_order_id
@@ -147,6 +148,8 @@ class QuadrigaTrader(Trader):
         # Only orders that matter are the ones that might fill us which can only
         # happen in the future.
         self._last_simulation_transaction_check = time.time()
+        
+        self._active_buy_order = True
         
     def sell(self, market_value):
         if self._waiting_for_order_to_fill != None:
@@ -182,6 +185,7 @@ class QuadrigaTrader(Trader):
         payload["price"] = round(market_value, self.price_precision)
         r = requests.post('https://api.quadrigacx.com/v2/sell', data=payload)
         self._waiting_for_order_to_fill = r.json()["id"]
+        self._active_sell_order = True
                 
     def simulation_sell(self, market_value):
         self._waiting_for_order_to_fill = QuadrigaTrader.simulation_sell_order_id
@@ -197,6 +201,8 @@ class QuadrigaTrader(Trader):
         # Only orders that matter are the ones that might fill us which can only
         # happen in the future.
         self._last_simulation_transaction_check = time.time()
+        
+        self._active_sell_order = True
             
     def was_order_filled(self, order_id):
         '''
@@ -337,14 +343,14 @@ class QuadrigaTrader(Trader):
                 self._active_buy_order = False
     
     def cancel_order(self, order_id):
-        payload = self.create_authenticated_payload()
-        payload["id"] = order_id
         order_info = self.lookup_order(order_id)
         # Type 0 == Buy, Type 1 == Sell
         if order_info["type"] == 0:
             self.balance = Decimal(order_info["price"]) * Decimal(order_info["amount"])
         else:
             self.assets = Decimal(order_info["amount"])
+        payload = self.create_authenticated_payload()
+        payload["id"] = order_id
         requests.post('https://api.quadrigacx.com/v2/cancel_order', data=payload)
     
     def abort(self):
