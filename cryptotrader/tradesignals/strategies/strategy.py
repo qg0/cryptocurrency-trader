@@ -8,7 +8,7 @@ Enables observers to be notified when an action should take place.
 class Strategy(object):
     
     def __init__(self):
-        self._observers = []
+        self.observers = []
         
     def attach_observer(self, observer):
         '''
@@ -18,8 +18,8 @@ class Strategy(object):
         
         if observer == None:
             raise ValueError("observer cannot be None")
-        self._observers.append(observer)
+        self.observers.append(observer)
         
     def notify_observers(self, should_buy, market_value):
-        for observer in self._observers:
+        for observer in self.observers:
             observer.notify_significant_change(should_buy, market_value)

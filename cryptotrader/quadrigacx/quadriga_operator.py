@@ -2,33 +2,37 @@
 This is the file a human should run to trade on QuadrigaCX.
 '''
 
-from cryptotrader.tradesignals.observers import MarketChangeObserver
+from quadriga_split_trader import attach_traders, authenticate_traders
 from cryptotrader.tradesignals.indicators import SpreadSize
 from cryptotrader.tradesignals.strategies.spread_size_strategy import SpreadSizeStrategy
-from cryptotrader.quadrigacx import QuadrigaTickers, QuadrigaOptions, QuadrigaPipeline, QuadrigaTrader
-from cryptotrader.quadrigacx.quadriga_ignore import QuadrigaSecret
+from cryptotrader.quadrigacx import QuadrigaTickers, QuadrigaOptions, QuadrigaPipeline
 from cryptotrader import DefaultPosition
 from decimal import Decimal
 
 # Set the options in one place to make it simple to edit later.
 # These are used in trade()
 options = QuadrigaOptions(QuadrigaTickers.BTC_USD)
+minimum_return = 1.01
+percentage_to_trade = 0.5
+number_of_traders = 2
 is_simulation = False
-start_by_buying = False
+start_by_buying = True
 aggressive = False
-minimum_return = 1.009
-percentage_to_trade = 0.7
 default_position = DefaultPosition.BUY
+options.undercut = 1
 
 def trade():
-    # Sensitive authentication information is kept in a secret file off GitHub.
-    trader = QuadrigaTrader(options, percentage_to_trade=percentage_to_trade, start_by_buying=start_by_buying)
-    if not is_simulation:
-        trader.authenticate(QuadrigaSecret.api_key, QuadrigaSecret.api_secret, QuadrigaSecret.client_id)
-    trader.should_default_to(default_position, aggressive=aggressive)
-    
     strategy = SpreadSizeStrategy(default_position, minimum_return=minimum_return, market_fee=options.fee, undercut_market_by=options.undercut)
-    strategy.attach_observer(MarketChangeObserver(trader))
+    attach_traders(strategy, options,
+                   percent_of_balance_to_trade=percentage_to_trade,
+                   default_position=default_position,
+                   aggressive=aggressive,
+                   start_by_buying=start_by_buying,
+                   traders=number_of_traders)
+    
+    # Sensitive authentication information is kept in a secret file off GitHub.
+    if not is_simulation:
+        authenticate_traders(strategy)
      
     def on_order_book(bids, asks):
         strategy.process_order_book(bids, asks)
