@@ -33,7 +33,7 @@ class SpreadSizeStrategy(Strategy):
             context.prec = 8
             self.undercut_market_by = Decimal(undercut_market_by)
 
-    def process_order_book(self, bids, asks):
+    def process_order_book(self, highest_bid, lowest_ask):
         '''
         Pre: Traders keep track of their balance / assets and do not attempt a trade when they do not
              have the balance to buy with or the assets to sell.
@@ -45,8 +45,8 @@ class SpreadSizeStrategy(Strategy):
             
             # The spread has to be calculated using the values that the strategy will try to use, not what
             # is already being used.
-            highest_bid = Decimal(bids[0][0])+self.undercut_market_by
-            lowest_ask = Decimal(asks[0][0])-self.undercut_market_by
+            highest_bid = Decimal(highest_bid)+self.undercut_market_by
+            lowest_ask = Decimal(lowest_ask)-self.undercut_market_by
 
             if self._spread_size_indicator.is_profitable(highest_bid, lowest_ask):
                 

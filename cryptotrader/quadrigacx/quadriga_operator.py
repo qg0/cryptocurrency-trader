@@ -19,7 +19,6 @@ is_simulation = False
 start_by_buying = True
 aggressive = False
 default_position = DefaultPosition.BUY
-options.undercut = 1
 
 def trade():
     strategy = SpreadSizeStrategy(default_position, minimum_return=minimum_return, market_fee=options.fee, undercut_market_by=options.undercut)
@@ -35,7 +34,7 @@ def trade():
         authenticate_traders(strategy)
      
     def on_order_book(bids, asks):
-        strategy.process_order_book(bids, asks)
+        strategy.process_order_book(bids[0][0], asks[0][0])
                      
     pipeline = QuadrigaPipeline(on_order_book, options.ticker)
     pipeline.start()
