@@ -6,3 +6,5 @@
 coinbaseUSD.csv
 realtime-data.txt
 quadriga_ignore.py
+secrets.json
+bittrex_ignore.py
