@@ -4,7 +4,6 @@ Loads data from QuadrigaCX.
 @author: Tobias Carryer
 '''
 
-import json
 import time
 from threading import Thread
 import requests
@@ -16,11 +15,7 @@ class QuadrigaPipeline(object):
         on_order_book should have 2 parameters: one for the bids and one for the asks.
         on_order_book will be called every [poll_time] seconds
         
-        minutes_to_reset is used to force a disconnect and reconnect to the websocket
-        every so many minutes.
-        
         Pre: product is not a list
-             minutes_to_reset is positive
              poll_time is a positive integer
         '''
         
@@ -53,8 +48,9 @@ class QuadrigaPipeline(object):
         '''
         Pre: self.order_book_url is valid
         Returns: JSON Dictionary with the entries "timestamp", "bids", and "asks"
-                 The bids and asks are two 2D lists. Each entry has exactly two entries in its second level,
-                 index 0 is the  order's price, and index 1 is the order's amount.
+                 The bids and asks are two 2D lists. Each entry has exactly two entries
+                 in its second level, index 0 is the  order's price, and
+                 index 1 is the order's amount.
         '''
 
         data = requests.get(self.order_book_url).json()
