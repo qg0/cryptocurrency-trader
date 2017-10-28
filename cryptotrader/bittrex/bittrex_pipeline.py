@@ -23,13 +23,13 @@ class BittrexPipeline(object):
         self.on_market_summary = on_market_summary
         self.bittrex_api = Bittrex(BittrexSecret.api_key, BittrexSecret.api_secret)
         self.poll_time = poll_time
-        self.minor_currency = minor_currency
         self._time_started = 0
+        self.minor_currency = minor_currency
         
         self.stop = False
         self.thread = None
 
-    def start(self):
+    def _start(self, get_market):
         def _go():
             last_time = 0
             while True:
@@ -38,16 +38,33 @@ class BittrexPipeline(object):
                     break
                 elif time.time() - last_time >= self.poll_time:
                     last_time = time.time()
-                    market_summaries = self.bittrex_api.get_market_summaries()
-                    for market_summary in market_summaries["result"]:
-                        if market_summary["MarketName"].startswith(self.minor_currency):
-                            trading = market_summary["MarketName"].replace(self.minor_currency+"-", '')
-                            self.on_market_summary(market_summary, trading)
+                    get_market()
 
         self.thread = Thread(target=_go)
         self.stop = False
         self.thread.start()
-        print("Started Bittrex pipeline.")
+
+    def start_singlemarket(self, market):
+        def _get_market():
+            market_summary = self.bittrex_api.get_marketsummary(self.market)["result"][0]
+            trading = market_summary["MarketName"].replace(self.minor_currency+"-", '')
+            self.on_market_summary(market_summary, trading)
+            
+        self.market = market
+        self._start(_get_market)
+        print("Started Bittrex pipeline for market: " +market)
+        
+
+    def start_multimarket(self):
+        def _get_market():
+            market_summaries = self.bittrex_api.get_market_summaries()
+            for market_summary in market_summaries["result"]:
+                if market_summary["MarketName"].startswith(self.minor_currency):
+                    trading = market_summary["MarketName"].replace(self.minor_currency+"-", '')
+                    self.on_market_summary(market_summary, trading)
+
+        self._start(_get_market)
+        print("Started Bittrex pipeline for all markets with the minor currency "+self.minor_currency+".")
 
     def stop(self):
         if not self.stop:
@@ -61,4 +78,4 @@ if __name__ == "__main__":
         print("Lowest ask: "+str(market_summary["Ask"])+"BTC")
         
     pipeline = BittrexPipeline(on_market_summary)
-    pipeline.start()
+    pipeline.start_multimarket()
