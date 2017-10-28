@@ -246,6 +246,9 @@ class QuadrigaTrader(Trader):
                                 self.balance = self._expecting_simulation_balance * self.post_fee
                                 self._active_sell_order = False
                                 self._waiting_for_order_to_fill = None
+                                
+            # Orders up to this moment have been processed, don't process them again.
+            self._last_simulation_transaction_check = time.time()
             
         else:
             
