@@ -255,7 +255,7 @@ class BittrexTrader(Trader):
                             incoming_balance = trade["Quantity"] * self._limit_order_price
                             self._filled_simulation_balance += incoming_balance
                             if self._filled_simulation_balance >= self._expecting_simulation_balance:
-                                self.balance = self._expecting_simulation_balance * self.fee_substracted
+                                self.balance = Decimal(self._expecting_simulation_balance * self.fee_substracted)
                                 self._active_sell_order = False
                                 self._waiting_for_order_to_fill = None
                                 
@@ -292,6 +292,8 @@ class BittrexTrader(Trader):
     
     def hold(self, market_value):
         ''' Cancel any open orders and revert back to the default position depending on aggressiveness. '''
+        
+        sys.stdout.write('h ')
         
         if self._waiting_for_order_to_fill != None:
             self.was_order_filled(self._waiting_for_order_to_fill)
