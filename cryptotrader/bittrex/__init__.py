@@ -1,2 +1,3 @@
 from bittrex_pipeline import BittrexPipeline
 from bittrex_ignore import BittrexSecret
+from bittrex_trader import BittrexTrader
