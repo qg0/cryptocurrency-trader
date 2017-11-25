@@ -77,7 +77,7 @@ class QuadrigaTrader(Trader):
         aggressive == True: sell/buy at a loss when told to hold to guarantee the default position is held.
         '''
         self.default_position = default_position
-        self.aggressive = False
+        self.aggressive = aggressive
         
     def fetch_balance_and_assets(self):
         '''
