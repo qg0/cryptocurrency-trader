@@ -8,3 +8,4 @@ realtime-data.txt
 quadriga_ignore.py
 secrets.json
 bittrex_ignore.py
+cryptopia_ignore.py
