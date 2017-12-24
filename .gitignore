@@ -9,3 +9,4 @@ quadriga_ignore.py
 secrets.json
 bittrex_ignore.py
 cryptopia_ignore.py
+twitter_api_ignore.py
