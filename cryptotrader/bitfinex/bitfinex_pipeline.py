@@ -14,22 +14,22 @@ import ast
 from cryptotrader.librariesrequired.websocket import create_connection, WebSocketConnectionClosedException
     
 class BitfinexPipeline(object):
-    def __init__(self, on_market_value, product, use_ask_value=False, minutes_to_reset=15):
+    def __init__(self, on_market_value, market_ticker, use_ask_value=False, minutes_to_reset=15):
         '''
         on_market_value is called every time a new data point is received from the websocket.
         on_market_value should have 2 parameters, websocket, and message.
-        message["last_price"] can be used to get the currency price of product.
+        message["last_price"] can be used to get the currency price of market_ticker.
         
         minutes_to_reset is used to force a disconnect and reconnect to the websocket
         every so many minutes
         
-        Pre: product is not a list
+        Pre: market_ticker is a String
              minutes_to_reset is positive
         '''
         
         self.on_market_value = on_market_value
         self.url = "wss://api.bitfinex.com/ws"
-        self.product = product.lower()
+        self.market_ticker = market_ticker.lower()
         self.use_ask_value = use_ask_value
         self.seconds_to_reset = minutes_to_reset * 60 #Time in seconds
         self._time_started = 0
@@ -37,7 +37,7 @@ class BitfinexPipeline(object):
         #GET Request the API to get the current value
         #Value is only set when it changes so multiple seconds could pass without
         #calling on_market_value if this is not done
-        ticker = urllib2.urlopen("https://api.bitfinex.com/v1/pubticker/"+str(product)).read()
+        ticker = urllib2.urlopen("https://api.bitfinex.com/v1/pubticker/"+str(self.market_ticker)).read()
         self.last_market_value = float(json.loads(ticker)["last_price"])
         
         self.stop = False
@@ -59,7 +59,7 @@ class BitfinexPipeline(object):
               self.stop == False
         '''
         
-        sub_params = {'event': 'subscribe', 'channel':'ticker', 'pair': self.product}
+        sub_params = {'event': 'subscribe', 'channel':'ticker', 'pair': self.market_ticker}
 
         self.ws = create_connection(self.url)
         self.ws.send(json.dumps(sub_params))

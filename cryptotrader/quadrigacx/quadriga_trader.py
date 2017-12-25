@@ -24,7 +24,7 @@ class QuadrigaTrader(Trader):
         
         # Trader is in test mode by default.
         # minimum_trade is the minimum amount of assets that can be sold on a trade.
-        Trader.__init__(self, True, options.minimum_trade)
+        Trader.__init__(self, True, options.minimum_trade, options.ticker)
         
         # Will be set to a number (order ID) when an order is placed.
         self._waiting_for_order_to_fill = None
@@ -42,7 +42,6 @@ class QuadrigaTrader(Trader):
         self._active_buy_order = False
         self._active_sell_order = False
         
-        self.product = options.ticker
         self.major_currency = options.major_currency
         self.minor_currency = options.minor_currency
         self.percentage_to_trade = Decimal(percentage_to_trade)
@@ -130,7 +129,7 @@ class QuadrigaTrader(Trader):
               
     def limit_buy_order(self, market_value):  
         payload = self.create_authenticated_payload()
-        payload["book"] = self.product
+        payload["book"] = self.market_ticker
         payload["amount"] = round(float(self.balance / market_value), self.amount_precision)
         payload["price"] = round(market_value, self.price_precision)
         r = requests.post('https://api.quadrigacx.com/v2/buy', data=payload)
@@ -180,7 +179,7 @@ class QuadrigaTrader(Trader):
                 
     def limit_sell_order(self, market_value):
         payload = self.create_authenticated_payload()
-        payload["book"] = self.product
+        payload["book"] = self.market_ticker
         payload["amount"] = round(float(self.assets), self.amount_precision)
         payload["price"] = round(market_value, self.price_precision)
         r = requests.post('https://api.quadrigacx.com/v2/sell', data=payload)
@@ -223,7 +222,7 @@ class QuadrigaTrader(Trader):
             
             # The time frame is an hour because the pipeline's polling frequency
             # could be set to be longer than the default number of seconds.
-            payload = {"book": self.product, "time": "hour"}
+            payload = {"book": self.market_ticker, "time": "hour"}
             r = requests.get('https://api.quadrigacx.com/v2/transactions', params=payload)
             
             for trade in r.json():

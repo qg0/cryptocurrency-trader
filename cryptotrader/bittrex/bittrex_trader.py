@@ -55,7 +55,7 @@ class BittrexTrader(Trader):
         self.validate_percentage_per_trade()
         
         # Get the market ticker and split it up for print statements.
-        self.market = market
+        self.market_ticker = market
         self.minor_currency, self.major_currency = market.split("-")
         
         with localcontext() as context:
@@ -130,7 +130,7 @@ class BittrexTrader(Trader):
                     else:
                         self.limit_buy_order(assets_to_buy, market_value)
                     
-                    print("Buying in "+self.market+". Planning to spend: "+str(self.balance)+self.minor_currency)
+                    print("Buying in "+self.market_ticker+". Planning to spend: "+str(self.balance)+self.minor_currency)
                     self.balance = Decimal(0)
                 else:
                     sys.stdout.write('b ')
@@ -140,7 +140,7 @@ class BittrexTrader(Trader):
               
     def limit_buy_order(self, quantity, market_value):
         if self.bittrex_api is not None:
-            result = self.bittrex_api.buy_limit(self.market, quantity, market_value)
+            result = self.bittrex_api.buy_limit(self.market_ticker, quantity, market_value)
             if result["result"] is not None:
                 self._waiting_for_order_to_fill = result["result"]["uuid"]
             self._active_buy_order = True
@@ -191,7 +191,7 @@ class BittrexTrader(Trader):
                 
     def limit_sell_order(self, quantity, market_value):
         if self.bittrex_api is not None:
-            result = self.bittrex_api.sell_limit(self.market, quantity, market_value)
+            result = self.bittrex_api.sell_limit(self.market_ticker, quantity, market_value)
             if result["result"] is not None:
                 self._waiting_for_order_to_fill = result["result"]["uuid"]
             self._active_sell_order = True
@@ -232,7 +232,7 @@ class BittrexTrader(Trader):
             # It is likely that simulation mode results in higher profits as in reality
             # other bots undercut our own trades so our orders are filled less frequently.
             
-            history = self.bittrex_api.get_market_history(self.market)["result"]
+            history = self.bittrex_api.get_market_history(self.market_ticker)["result"]
             
             for trade in history:
                 if "." in trade["TimeStamp"]:

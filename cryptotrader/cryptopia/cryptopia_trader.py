@@ -34,7 +34,7 @@ class CryptopiaTrader(Trader):
         '''
         
         # Split up the trading pair for currency specific options and for console output.
-        self.product = trading_pair
+        self.market_ticker = trading_pair
         split_pair = trading_pair.split("_")
         self.major_currency = split_pair[0]
         self.minor_currency = split_pair[1]
@@ -140,6 +140,7 @@ class CryptopiaTrader(Trader):
             
                 #Always spend all the balance. A percentage of it was allocated to the trader at the start.
                 assets_to_buy = self.balance / market_value
+               
                 if assets_to_buy >= self.minimum_trade:
                     
                     self._active_buy_order = True
@@ -159,7 +160,7 @@ class CryptopiaTrader(Trader):
               
     def limit_buy_order(self, market_value):
         url = "https://www.cryptopia.co.nz/api/SubmitTrade"
-        post_data = json.dumps({"Market": self.product,
+        post_data = json.dumps({"Market": self.market_ticker,
                      "Amount": round(float(self.balance / market_value), self.amount_precision),
                      "Rate": round(market_value, self.price_precision),
                      "Type": "Buy"})
@@ -213,7 +214,7 @@ class CryptopiaTrader(Trader):
                 
     def limit_sell_order(self, market_value):
         url = "https://www.cryptopia.co.nz/api/SubmitTrade"
-        post_data = json.dumps({"Market": self.product,
+        post_data = json.dumps({"Market": self.market_ticker,
                                 "Amount": round(float(self.assets), self.amount_precision),
                                 "Rate": round(market_value, self.price_precision),
                                 "Type": "Sell"})
@@ -259,7 +260,7 @@ class CryptopiaTrader(Trader):
             
             # The time frame is an hour because the pipeline's polling frequency
             # could be set to be longer than the default number of seconds.
-            r = requests.get('https://www.cryptopia.co.nz/api/GetMarketHistory/'+self.product+"/1")
+            r = requests.get('https://www.cryptopia.co.nz/api/GetMarketHistory/'+self.market_ticker+"/1")
             
             for trade in r.json()["Data"]:
                 if int(trade["Timestamp"]) < self._last_simulation_transaction_check:
@@ -292,7 +293,7 @@ class CryptopiaTrader(Trader):
             # Note: The pipeline never knows the Trader's status so the pipeline will continue
             #       to pass data to the market observer.
             
-            open_order = self.lookup_open_order(order_id, self.product)
+            open_order = self.lookup_open_order(order_id, self.market_ticker)
             
             if open_order == None:
                 # Order was filled or cancelled.
@@ -368,7 +369,7 @@ class CryptopiaTrader(Trader):
                 self._active_buy_order = False
     
     def cancel_order(self, order_id):
-        order_info = self.lookup_open_order(order_id, self.product)
+        order_info = self.lookup_open_order(order_id, self.market_ticker)
         if order_info == None:
             print("cancel_order was called but the order was already filled or cancelled.")
         else:
@@ -384,6 +385,8 @@ class CryptopiaTrader(Trader):
     
     def abort(self):
         Trader.abort(self)
+        if self._waiting_for_order_to_fill != None and self.is_test == False:
+            self.cancel_order(self._waiting_for_order_to_fill)
         self._waiting_for_order_to_fill = None
         print("CryptopiaTrader is shutting down.")
         

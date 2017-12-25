@@ -10,17 +10,17 @@ import requests
 from quadriga_options import QuadrigaTickers
 
 class QuadrigaPipeline(object):
-    def __init__(self, on_order_book, product=QuadrigaTickers.BTC_CAD, poll_time=15):
+    def __init__(self, on_order_book, market_ticker=QuadrigaTickers.BTC_CAD, poll_time=15):
         '''
         on_order_book should have 2 parameters: one for the bids and one for the asks.
         on_order_book will be called every [poll_time] seconds
         
-        Pre: product is not a list
+        Pre: market_ticker is a String in Quadriga's ticker format.
              poll_time is a positive integer
         '''
         
         self.on_order_book = on_order_book
-        self.order_book_url = "https://api.quadrigacx.com/v2/order_book?book=" + product
+        self.order_book_url = "https://api.quadrigacx.com/v2/order_book?book=" + market_ticker
         self.poll_time = poll_time
         self._time_started = 0
         
