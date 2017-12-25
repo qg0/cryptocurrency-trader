@@ -4,7 +4,7 @@ Makes sure all the other general classes work on the Bitfinex.
 @author: Tobias Carryer
 '''
 
-from cryptotrader.tradesignals.observers import MarketChangeObserver
+from cryptotrader.tradesignals import StrategyObserver
 from cryptotrader.tradesignals.strategies import SarStrategy
 from cryptotrader.trader import Trader
 from cryptotrader.bitfinex import BitfinexPipeline
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     #Real-time data test
     trader = BitfinexTrader(True, 0.01)
     strategy = SarStrategy()
-    strategy.attach_observer(MarketChangeObserver(trader))
+    strategy.attach_observer(StrategyObserver(trader))
     data_points_per_period = 300
                   
     def on_market_value(value):

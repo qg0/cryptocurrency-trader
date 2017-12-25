@@ -6,6 +6,7 @@ from cryptotrader.tradesignals.strategies.spread_size_strategy import SpreadSize
 from cryptotrader.cryptopia.cryptopia_ignore import CryptopiaSecret
 from cryptotrader.cryptopia import CryptopiaTrader, CryptopiaPipeline, cryptopia_fee
 from cryptotrader import DefaultPosition
+from cryptotrader.tradesignals import StrategyObserver, SingleTradeStrategyObserver
 from decimal import Decimal
 
 # Set the options in one place to make it simple to edit later.
@@ -29,6 +30,7 @@ def trade():
     strategy = SpreadSizeStrategy(default_position, minimum_return=minimum_return, market_fee=cryptopia_fee, undercut_market_by=undercut)
     def on_order_book(bids, asks):
         strategy.process_order_book(bids[0]["Price"], asks[0]["Price"])
+    strategy.attach_observer(StrategyObserver(trader))
                      
     pipeline = CryptopiaPipeline(on_order_book, trading_pair)
     pipeline.start()

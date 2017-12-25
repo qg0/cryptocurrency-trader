@@ -9,7 +9,7 @@ from cryptotrader.tradesignals.strategies.spread_size_strategy import SpreadSize
 from cryptotrader.bittrex.bittrex_pipeline import BittrexPipeline
 from cryptotrader.bittrex.bittrex_options import bittrex_fee, bittrex_btc_undercut,\
     bittrex_eth_undercut, bittrex_usd_undercut
-from cryptotrader.tradesignals.observers.market_change_observer import MarketChangeObserver
+from cryptotrader.tradesignals.strategy_observer import StrategyObserver
 from cryptotrader.bittrex import BittrexTrader
 from cryptotrader.tradesignals.strategies.investing_dot_com_strategy import InvestingDotComStrategy
     
@@ -32,7 +32,7 @@ def trade_single_market_spread():
         trader.authenticate()
     
     strategy = SpreadSizeStrategy(default_position, minimum_return=minimum_return, market_fee=bittrex_fee, undercut_market_by=undercut)
-    strategy.attach_observer(MarketChangeObserver(trader))
+    strategy.attach_observer(StrategyObserver(trader))
      
     def on_market_summary(market_summary, market):
         strategy.process_order_book(market_summary["Bid"], market_summary["Ask"])
@@ -47,7 +47,7 @@ def trade_investing_dot_com_strategy(market_url):
         trader.authenticate()
     
     strategy = InvestingDotComStrategy(market_url, undercut=undercut)
-    strategy.attach_observer(MarketChangeObserver(trader))
+    strategy.attach_observer(StrategyObserver(trader))
      
     def on_market_summary(market_summary, market):
         strategy.get_trading_signal(market_summary["Bid"], market_summary["Ask"])

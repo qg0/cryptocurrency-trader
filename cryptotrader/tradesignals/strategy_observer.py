@@ -4,7 +4,7 @@ Observes when a strategy says to buy or sell.
 @author Tobias Carryer
 '''
 
-class MarketChangeObserver(object):
+class StrategyObserver(object):
     
     def __init__(self, trader):
         self.trader = trader
