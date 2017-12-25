@@ -55,6 +55,10 @@ class CryptopiaTrader(Trader):
         self._filled_simulation_balance = 0
         self._filled_simulation_assets = 0
         
+        # Needs to be None or the program will crash in simulation mode when it
+        # checks if the bot was shut off manually (a live-only feature)
+        self.emergency_shutdown_id = None
+        
         # Used when aborting to determine if any positions need to be closed.
         self._active_buy_order = False
         self._active_sell_order = False
@@ -194,8 +198,8 @@ class CryptopiaTrader(Trader):
             # Prevent selling while a buy order is active.
             if self._waiting_for_order_to_fill == None:
             
-                #Always sell all assets. A percentage of them was allocated to the trader at the start.
-                if self.assets >= self.minimum_trade:
+                #Always sell all assets.
+                if self.assets*market_value >= self.minimum_trade:
                     
                     self._active_sell_order = True
                     
@@ -321,7 +325,7 @@ class CryptopiaTrader(Trader):
                 # Cancel sell order
                 if self._active_sell_order:
                     if not self.is_test:
-                        self.cancel_order(self._waiting_for_order_to_fill)
+                        self.cancel_order(self._waiting_for_order_to_fill, self.market_ticker)
                     self._waiting_for_order_to_fill = None
                     self._active_sell_order = False
             
@@ -340,7 +344,7 @@ class CryptopiaTrader(Trader):
                 # Cancel buy order
                 if self._active_buy_order:
                     if not self.is_test:
-                        self.cancel_order(self._waiting_for_order_to_fill)
+                        self.cancel_order(self._waiting_for_order_to_fill, self.market_ticker)
                     self._waiting_for_order_to_fill = None
                     self._active_buy_order = False
                 
@@ -358,18 +362,18 @@ class CryptopiaTrader(Trader):
             # Keep orders open if they help reach the default position.
             if self._active_sell_order and self.default_position != DefaultPosition.SELL:
                 if not self.is_test:
-                    self.cancel_order(self._waiting_for_order_to_fill)
+                    self.cancel_order(self._waiting_for_order_to_fill, self.market_ticker)
                 self._waiting_for_order_to_fill = None
                 self._active_sell_order = False
         
             if self._active_buy_order and self.default_position != DefaultPosition.BUY:
                 if not self.is_test:
-                    self.cancel_order(self._waiting_for_order_to_fill)
+                    self.cancel_order(self._waiting_for_order_to_fill, self.market_ticker)
                 self._waiting_for_order_to_fill = None
                 self._active_buy_order = False
     
-    def cancel_order(self, order_id):
-        order_info = self.lookup_open_order(order_id, self.market_ticker)
+    def cancel_order(self, order_id, market_ticker="NEO_BTC"):
+        order_info = self.lookup_open_order(order_id, market_ticker)
         if order_info == None:
             print("cancel_order was called but the order was already filled or cancelled.")
         else:
@@ -385,8 +389,8 @@ class CryptopiaTrader(Trader):
     
     def abort(self):
         Trader.abort(self)
-        if self._waiting_for_order_to_fill != None and self.is_test == False:
-            self.cancel_order(self._waiting_for_order_to_fill)
+        if self.emergency_shutdown_id != None and self.is_test == False:
+            self.cancel_order(self.emergency_shutdown_id, market_ticker=self.emergency_shutdown_location)
         self._waiting_for_order_to_fill = None
         print("CryptopiaTrader is shutting down.")
         
@@ -407,11 +411,17 @@ class CryptopiaTrader(Trader):
         url = "https://www.cryptopia.co.nz/api/SubmitTrade"
         post_data = json.dumps({"Market": self.emergency_shutdown_location,
                                 "Amount": 0.00000001,
-                                "Rate": 5500.00000000,
+                                "Rate": 55000.00000000,
                                 "Type": "Sell"})
         header = self.create_authenticated_header(url, post_data)
         r = requests.post(url, data=post_data, headers=header)
-        self.emergency_shutdown_id = r.json()["Data"]["OrderId"]
+        try:
+            self.emergency_shutdown_id = r.json()["Data"]["OrderId"]
+        except TypeError:
+            # The emergency abort order could not be placed, likely because
+            # there is no coin to place the order with or because it was placed
+            # by a previous instance of this bot and never cancelled.
+            raise Warning("Cannot start live Cryptopia bot without at least 0.00000001"+self.emergency_shutdown_location.strip("_BTC"))
         
     def check_for_abort(self):
         if self.emergency_shutdown_id != None and self.lookup_open_order(self.emergency_shutdown_id, self.emergency_shutdown_location) == None:
