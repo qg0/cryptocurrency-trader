@@ -9,17 +9,17 @@ from threading import Thread
 import requests
 
 class CryptopiaPipeline(object):
-    def __init__(self, on_order_book, product="BTC_USDT", poll_time=15):
+    def __init__(self, on_order_book, market_ticker="BTC_USDT", poll_time=15):
         '''
         on_order_book should have 2 parameters: one for the bids and one for the asks.
         on_order_book will be called every [poll_time] seconds
         
-        Pre: product is not a list
+        Pre: market_ticker is a String in Cryptopia's format
              poll_time is a positive integer
         '''
         
         self.on_order_book = on_order_book
-        self.order_book_url = "https://www.cryptopia.co.nz/api/GetMarketOrders/" + product
+        self.order_book_url = "https://www.cryptopia.co.nz/api/GetMarketOrders/" + market_ticker
         self.poll_time = poll_time
         self._time_started = 0
         
