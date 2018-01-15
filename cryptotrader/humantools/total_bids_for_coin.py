@@ -1,6 +1,10 @@
 import requests
 from decimal import Decimal, localcontext
 from cryptotrader.tradesignals.indicators.coinmarketcap_price import get_coinmarketcap_price
+from cryptotrader.bittrex.bittrex_operator import minor_currency
+import matplotlib.pyplot as plt
+import csv
+from time import time
 
 class Exchange:
     GDAX = 10
@@ -315,7 +319,42 @@ def get_sum_of_bids_and_asks(lowest_price=Decimal(0), highest_price=Decimal(1000
     
     return (bids_sum, asks_sum)
 
-if __name__ == "__main__":
+def append_to_historical_orderbook_data(coin_name, bids_sum, asks_sum,price):
+    with open(coin_name+'_orderbook_sum_history.csv', 'a') as history_file:
+        writer = csv.writer(history_file)
+        writer.writerow([bids_sum,asks_sum,price,time()])
+
+def plot_orderbook_over_time(coin_name):
+    with open(coin_name+'_orderbook_sum_history.csv', 'r') as history_file:
+        reader = csv.reader(history_file)
+        sum_of_bids = []
+        sum_of_asks = []
+        time_stamps = []
+        for row in reader:
+            sum_of_bids.append(row[0])
+            sum_of_asks.append(row[1])
+            # row[2] is the historical price and is not used
+            # It is in the csv file to test the correlation between the orderbook
+            # and price movements.
+            time_stamps.append(row[3])
+        plt.plot(time_stamps, sum_of_bids, label="Sum of Bids")
+        plt.plot(time_stamps, sum_of_asks, label="Sum of Asks")
+        plt.legend()
+        plt.xlabel("Time (ms)")
+        plt.ylabel("Sum of orderbook (BTC)")
+        plt.show()
+        
+def update_historical_ethereum_data():
+    ''' Sums the top 20% of bids and bottom 20% of asks then plots them against historical sums. '''
+    coinmarketcap_id = "ethereum"
+    price = get_coinmarketcap_price(coinmarketcap_id)
+    lower_bound = price * Decimal(0.8) # Top 20% of bids
+    upper_bound = price * Decimal(1.2) # Bottom 20% of asks
+    bids_sum, asks_sum = get_sum_of_bids_and_asks(lowest_price=lower_bound, highest_price=upper_bound, major_currency="ETH")
+    append_to_historical_orderbook_data(coinmarketcap_id, bids_sum, asks_sum, price)
+    plot_orderbook_over_time(coinmarketcap_id)
+
+def fetch_orderbook_data_once():
     print("Please enter the name of the coin you want info for. It should be lowercase and spaces should be replaced with -")
     coinmarketcap_id = raw_input("")
     price = get_coinmarketcap_price(coinmarketcap_id)
@@ -328,6 +367,10 @@ if __name__ == "__main__":
     major_currency = raw_input("").upper()
     
     bids_sum, asks_sum = get_sum_of_bids_and_asks(lowest_price=lower_bound, highest_price=upper_bound, major_currency=major_currency)
-    print "Sum of top "+str(top)+"% of bids: " + str(bids_sum) + " " + major_currency
-    print "Sum of bottom "+str(top)+"% of asks: " + str(asks_sum) + " " + major_currency
+    print "Sum of top "+str(top)+"% of bids: " + str(bids_sum) + " " + minor_currency
+    print "Sum of bottom "+str(top)+"% of asks: " + str(asks_sum) + " " + minor_currency
+
+if __name__ == "__main__":
+    #fetch_orderbook_data_once()
+    update_historical_ethereum_data()
     
