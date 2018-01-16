@@ -178,7 +178,12 @@ class CryptopiaTrader(Trader):
                      "Type": "Buy"})
         header = self.create_authenticated_header(url, post_data)
         r = requests.post(url, data=post_data, headers=header)
-        self._waiting_for_order_to_fill = r.json()["Data"]["OrderId"]
+        order_id = r.json()["Data"]["OrderId"]
+        if order_id == None:
+            # Order was already filled.
+            self.fetch_balance_and_assets() 
+        else:
+            self._waiting_for_order_to_fill = order_id
         self._active_buy_order = True
                 
     def simulation_buy(self, assets_to_buy):
@@ -200,7 +205,7 @@ class CryptopiaTrader(Trader):
         
         if self._waiting_for_order_to_fill != None:
             self.was_order_filled(self._waiting_for_order_to_fill)
-            
+        
         if self.can_sell:
             
             # Prevent selling while a buy order is active.
@@ -310,10 +315,10 @@ class CryptopiaTrader(Trader):
             if open_order == None:
                 # Order was filled or cancelled.
                 self.fetch_balance_and_assets()
-                if self._active_buy_order:
+                if self._active_buy_order == True:
                     self._active_buy_order = False
                     self.balance = Decimal(0)
-                else:
+                elif self._active_sell_order == True:
                     self._active_sell_order = False
                     self.assets = Decimal(0)
                 self._waiting_for_order_to_fill = None
