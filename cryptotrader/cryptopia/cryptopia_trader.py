@@ -120,14 +120,22 @@ class CryptopiaTrader(Trader):
             header_minor = self.create_authenticated_header(url, post_data_minor)
             r_minor = requests.post(url, data=post_data_minor, headers=header_minor)
             data_minor = r_minor.json()["Data"]
-            self.balance = Decimal(data_minor[0]["Available"]) * self.percentage_to_trade
+            try:
+                self.balance = Decimal(data_minor[0]["Available"]) * self.percentage_to_trade
+            except TypeError:
+                #data_minor is null. No balance was found.
+                self.balance = Decimal(0)
             
             #Fetch available major currency from the exchange
             post_data_major = json.dumps({"Currency": self.major_currency})
             header_major = self.create_authenticated_header(url, post_data_major)
             r_major = requests.post(url, data=post_data_major, headers=header_major)
             data_major = r_major.json()["Data"]
-            self.assets = Decimal(data_major[0]["Available"]) * self.percentage_to_trade
+            try:
+                self.assets = Decimal(data_major[0]["Available"]) * self.percentage_to_trade
+            except TypeError:
+                #data_major is null. No balance was found.
+                self.assets = Decimal(0)
             
             print("Trading with: "+str(round(self.balance, 3))+self.minor_currency+" and "+str(round(self.assets,3))+self.major_currency)
         
