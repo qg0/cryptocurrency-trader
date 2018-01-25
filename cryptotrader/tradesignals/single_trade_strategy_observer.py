@@ -16,6 +16,9 @@ from cryptotrader.helper_methods import quantity_adjusted_for_decimals
 class SingleTradeStrategyObserver(StrategyObserver):
     
     def notify_significant_change(self, should_buy, market_value, market_ticker, amount_to_buy=Decimal(-1)):
+        '''
+        ticker_to_remove is the portion of the ticker to remove to get the major currency
+        '''
         # Have just enough to buy. Assumes the trader determines how much to buy
         # by calculating self.balance / market_value
 
@@ -24,10 +27,14 @@ class SingleTradeStrategyObserver(StrategyObserver):
         
         if should_buy == True:
             self.trader.market_ticker = market_ticker
+            # Hardcoded ticker removal should be updated to support different exchanges
+            self.trader.major_currency = market_ticker.replace("_BTC", "")
             self.trader.assets = Decimal(0) # Disregard assets for the previous market
             self.trader.buy(market_value)
         elif should_buy == False:
             self.trader.market_ticker = market_ticker
+            # Hardcoded ticker removal should be updated to support different exchanges
+            self.trader.major_currency = market_ticker.replace("_BTC", "")
             self.trader.sell(market_value)
             self.trader.abort()
         else:
