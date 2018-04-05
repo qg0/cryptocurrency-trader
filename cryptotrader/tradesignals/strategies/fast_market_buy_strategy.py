@@ -7,13 +7,14 @@ It prioritizes speed over emulating a true market order.
 from cryptotrader.tradesignals.strategies import Strategy
 from decimal import Decimal
 from cryptotrader.helper_methods import quantity_adjusted_for_decimals
+from time import sleep
 
 class FastMarketBuyTool(Strategy):
     '''
     Uses SingleTradeStrategyObserver
     '''
     
-    def __init__(self, get_asks, balance_to_spend, trading_fee=Decimal(0.002), max_price_dif=Decimal(1.35), price_key="Price", volume_key="Volume", ticker_format="REPLACE_BTC"):
+    def __init__(self, get_asks, balance_to_spend, trading_fee=Decimal(0.002), max_price_dif=Decimal(1.35), target_profit=Decimal(1.50), price_key="Price", volume_key="Volume", ticker_format="REPLACE_BTC"):
         '''
         get_asks must return an array where each entry are the asks are in
             ascending order. Each entry in the array is a dictionary with the
@@ -28,6 +29,7 @@ class FastMarketBuyTool(Strategy):
         self.price_key = price_key
         self.volume_key = volume_key
         self.ticker_format = ticker_format
+        self.target_profit = target_profit
         self.max_price_dif = max_price_dif
         print("Created Fast Market Buy Strategy.")
         print("This strategy simulates a market buy using limit orders.")
@@ -49,6 +51,9 @@ class FastMarketBuyTool(Strategy):
                 amount_to_buy = (self.balance_to_spend / target_ask) * self.post_fee
                 amount_to_buy = quantity_adjusted_for_decimals(amount_to_buy)
                 self.notify_observers(True, target_ask, market=market_ticker, amount_to_buy=amount_to_buy)
+                sleep(5)
+                profit_ask = quantity_adjusted_for_decimals((lowest_ask+target_ask)/2 * self.target_profit)
+                self.notify_observers(False, profit_ask, market=market_ticker)
                 retry = False
             except TypeError:
                 print("Invalid coin ticker.")
